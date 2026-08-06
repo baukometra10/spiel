@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title>مرسم لولو App Icon</title>
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffadcc"/>
+      <stop offset="100%" stop-color="#ff7ac2"/>
+    </linearGradient>
+    <linearGradient id="brushGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffd4ec"/>
+      <stop offset="100%" stop-color="#ff90d6"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" ry="96" fill="url(#bgGradient)"/>
+  <path d="M146 126c54-62 226-42 225 31 0 45-39 165-45 169-20 10-100 23-152 9-55-15-92-75-80-118 8-28 18-42 52-57z" fill="#fff"/>
+  <path d="M185 137c36-39 136-27 141 11 5 34-16 86-34 103-21 21-90 25-118 14-31-12-40-48-27-79 7-17 21-34 38-49z" fill="#f9d4f2"/>
+  <circle cx="189" cy="199" r="22" fill="#f64b9e"/>
+  <circle cx="246" cy="164" r="20" fill="#ffde70"/>
+  <circle cx="297" cy="228" r="18" fill="#72d1ff"/>
+  <circle cx="226" cy="252" r="14" fill="#ffffff" opacity="0.8"/>
+  <path d="M202 305c45 21 88 25 132-5" fill="none" stroke="#ff5bac" stroke-width="28" stroke-linecap="round"/>
+  <path d="M310 360c-12 16-42 20-62 11-18-8-31-31-20-49 16-27 60-20 78 4 8 10 8 24 4 34z" fill="url(#brushGradient)"/>
+  <path d="M340 279c16 16 30 40 10 58-26 22-70 11-92-4-7-5-8-17 1-23 11-7 34-1 54-5 16-3 22-17 27-26z" fill="#fff"/>
+  <path d="M292 335c12 12 12 31 0 43-12 12-31 12-43 0-12-12-12-31 0-43 12-12 31-12 43 0z" fill="#ff7ac2"/>
+</svg>

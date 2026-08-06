@@ -32,6 +32,10 @@
 🎨 غرفة الرسم
 </h1>
 
+<div class="action-banner">
+  ابدئي التلوين الآن: اختاري رسمة أو ارفعي صورتك ثم استخدمي الألوان والأدوات.
+</div>
+
 <div id="studioStatus" class="status" style="display:none;"></div>
 <div id="confettiContainer" class="confetti-container"></div>
 
@@ -41,12 +45,35 @@
 
 
 
-<input 
-type="file"
-id="upload"
-accept="image/*">
-
-
+<div class="panel-group">
+  <h3>رسومات جاهزة للتلوين</h3>
+  <p class="help-text">اختر رسمة جاهزة أو ارفع صورتك ثم استخدم الألوان لتلوينها.</p>
+  <div class="template-buttons">
+      <button type="button" class="template-card" onclick="loadTemplate('flower.png')">
+        <img src="flower.png" alt="زهرة">
+        <span>زهرة</span>
+      </button>
+      <button type="button" class="template-card" onclick="loadTemplate('butterfly.png')">
+        <img src="butterfly.png" alt="فراشة">
+        <span>فراشة</span>
+      </button>
+      <button type="button" class="template-card" onclick="loadTemplate('cat.png')">
+        <img src="cat.png" alt="قطة">
+        <span>قطة</span>
+      </button>
+      <button type="button" class="template-card" onclick="loadTemplate('castle.png')">
+        <img src="castle.png" alt="قلعة">
+        <span>قلعة</span>
+      </button>
+      <button type="button" class="template-card" onclick="loadTemplate('unicorn.png')">
+        <img src="unicorn.png" alt="يونيكورن">
+        <span>يونيكورن</span>
+      </button>
+    </div>
+    <p class="help-text">انقر على أي رسمة لتحميلها في اللوحة ثم ابدأ التلوين.</p>
+    <p class="help-text">أو يمكنك رفع صورة من جهازك لتلوينها.</p>
+    <label for="upload" class="button-small upload-button">📤📸 رفع صورة للتلوين</label>
+    <p class="help-text">اختر صورة من الهاتف أو التابلت لبدء التلوين مباشرة.</p>
 
 <div class="toolbar">
 

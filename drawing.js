@@ -13,6 +13,7 @@ let drawing = false;
 let lastX = 0;
 let lastY = 0;
 let currentBackground = "white";
+let currentTemplate = null;
 
 function resizeCanvas() {
   const width = Math.min(window.innerWidth - 40, 760);
@@ -44,6 +45,8 @@ function drawBackground() {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
+
+  drawTemplate();
 }
 
 function drawStar(cx, cy, spikes, outerRadius, innerRadius, color) {
@@ -323,8 +326,32 @@ function setBackground(type) {
 }
 
 function clearCanvas() {
+  currentTemplate = null;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBackground();
+}
+
+function drawTemplate() {
+  if (!currentTemplate) {
+    return;
+  }
+
+  const ratio = Math.min(canvas.width / currentTemplate.width, canvas.height / currentTemplate.height);
+  const width = currentTemplate.width * ratio;
+  const height = currentTemplate.height * ratio;
+  const x = (canvas.width - width) / 2;
+  const y = (canvas.height - height) / 2;
+  ctx.drawImage(currentTemplate, x, y, width, height);
+}
+
+function loadTemplate(src) {
+  const image = new Image();
+  image.onload = () => {
+    currentTemplate = image;
+    drawBackground();
+    showStudioStatus("تم تحميل الرسم للتلوين 🎉");
+  };
+  image.src = src;
 }
 
 function showStudioStatus(message) {
@@ -372,12 +399,14 @@ function loadUploadImage() {
   reader.onload = () => {
     const image = new Image();
     image.onload = () => {
+      currentTemplate = image;
       const ratio = Math.min(canvas.width / image.width, canvas.height / image.height);
       const width = image.width * ratio;
       const height = image.height * ratio;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawBackground();
-      ctx.drawImage(image, 0, 0, width, height);
+      ctx.drawImage(image, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
+      showStudioStatus("تم تحميل صورتك للتلوين 🎉");
     };
     image.src = reader.result;
   };
