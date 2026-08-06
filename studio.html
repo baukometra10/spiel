@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+
+<html lang="ar" dir="rtl">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+
+<title>
+🎨 مرسم لولو
+</title>
+
+
+<link rel="stylesheet" href="css/style.css">
+
+</head>
+
+
+<body>
+
+
+<div class="app">
+
+
+<div class="page">
+
+
+<h1 class="page-title">
+🎨 غرفة الرسم
+</h1>
+
+<div id="studioStatus" class="status" style="display:none;"></div>
+<div id="confettiContainer" class="confetti-container"></div>
+
+<p>
+أهلاً يا <span id="name"></span> 🌸
+</p>
+
+
+
+<input 
+type="file"
+id="upload"
+accept="image/*">
+
+
+
+<div class="toolbar">
+
+
+<button class="tool" onclick="pencil()">
+✏️ قلم
+</button>
+
+
+<button class="tool" onclick="rainbow()">
+🌈 ألوان
+</button>
+
+
+<button class="tool" onclick="eraser()">
+🧼 ممحاة
+</button>
+
+
+<button class="tool" onclick="setSize(5)">
+🟣 صغير
+</button>
+
+
+<button class="tool" onclick="setSize(12)">
+🟠 متوسط
+</button>
+
+
+<button class="tool" onclick="setSize(20)">
+🟡 كبير
+</button>
+
+
+<button class="tool" onclick="clearCanvas()">
+🧹 مسح
+</button>
+
+
+<button class="tool" onclick="saveDrawing()">
+💾 حفظ
+</button>
+
+
+</div>
+
+<div class="panel">
+  <div class="panel-group">
+    <h3>ألوان</h3>
+    <div class="color-buttons">
+      <button type="button" class="color-button" style="background:#ff69b4;" onclick="setColor('#ff69b4')" aria-label="اللون الوردي"></button>
+      <button type="button" class="color-button" style="background:#4d8cff;" onclick="setColor('#4d8cff')" aria-label="اللون الأزرق"></button>
+      <button type="button" class="color-button" style="background:#34c759;" onclick="setColor('#34c759')" aria-label="اللون الأخضر"></button>
+      <button type="button" class="color-button" style="background:#ffcd3c;" onclick="setColor('#ffcd3c')" aria-label="اللون الأصفر"></button>
+      <button type="button" class="color-button" style="background:#000000;" onclick="setColor('#000000')" aria-label="اللون الأسود"></button>
+    </div>
+  </div>
+  <div class="panel-group">
+    <h3>ملصقات</h3>
+    <div class="sticker-grid">
+      <button type="button" class="sticker-button" onclick="addSticker('butterfly')" aria-label="فراشة">🦋</button>
+      <button type="button" class="sticker-button" onclick="addSticker('castle')" aria-label="قلعة">🏰</button>
+      <button type="button" class="sticker-button" onclick="addSticker('cat')" aria-label="قطة">🐱</button>
+      <button type="button" class="sticker-button" onclick="addSticker('unicorn')" aria-label="يونيكورن">🦄</button>
+      <button type="button" class="sticker-button" onclick="addSticker('rainbow')" aria-label="قوس قزح">🌈</button>
+      <button type="button" class="sticker-button" onclick="addSticker('princess')" aria-label="أميرة">👑</button>
+    </div>
+  </div>
+  <div class="panel-group">
+    <h3>الخلفية</h3>
+    <div class="background-buttons">
+      <button type="button" class="button-small" onclick="setBackground('white')">أبيض</button>
+      <button type="button" class="button-small" onclick="setBackground('gradient')">تدرج</button>
+      <button type="button" class="button-small" onclick="setBackground('sparkle')">نجوم</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="canvas"></canvas>
+
+
+
+<br>
+
+
+<a class="button-small" href="gallery.html">
+🖼️ الذهاب للوحاتي
+</a>
+
+
+</div>
+
+
+</div>
+
+
+
+<script src="storage.js"></script>
+<script src="js/origin-warning.js"></script>
+
+<script src="drawing.js"></script>
+
+<script>
+
+
+document.getElementById("name").innerHTML =
+getChildName();
+
+
+</script>
+
+</body>
+
+</html>

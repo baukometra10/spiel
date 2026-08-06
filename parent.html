@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>🔒 للوالدين</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<div class="app">
+<div class="page">
+
+<h1 class="page-title">🔒 للوالدين</h1>
+
+<p>هذا المكان مخصص للوالدين لمتابعة تقدم الفنانة الصغيرة وإدارة بيانات التطبيق.</p>
+
+<div class="reward">
+  اسم الفنانة: <strong id="childName"></strong>
+</div>
+
+<div class="reward">
+  عدد النجوم: <strong id="starCount"></strong>
+</div>
+
+<div class="reward">
+  عدد اللوحات المحفوظة: <strong id="drawingCount"></strong>
+</div>
+
+<button class="button-small" onclick="clearApplicationData()">حذف كل بيانات التطبيق 🗑️</button>
+<br><br>
+<a class="button-small" href="index.html">🏠 الرئيسية</a>
+
+</div>
+</div>
+
+<script src="storage.js"></script>
+<script src="js/origin-warning.js"></script>
+<script>
+  document.getElementById("childName").innerText = getChildName();
+  document.getElementById("starCount").innerText = getStars();
+  document.getElementById("drawingCount").innerText = getDrawings().length;
+
+  function clearApplicationData() {
+    if (confirm("هل تريدين حذف كل بيانات التطبيق؟")) {
+      clearAllData();
+      location.reload();
+    }
+  }
+</script>
+
+</body>
+
+</html>

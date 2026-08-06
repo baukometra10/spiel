@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>🎀 مرسم لولو</title>
+
+<link rel="stylesheet" href="css/style.css">
+
+<link rel="manifest" href="manifest.json">
+
+<meta name="theme-color" content="#ff8fcf">
+
+</head>
+
+
+<body>
+
+
+<div class="app">
+
+<div class="page">
+
+
+<div class="welcome">
+
+
+<div class="character">
+🎀👧🎨
+</div>
+<button id="installButton" type="button" aria-label="تثبيت التطبيق"
+style="display:none">
+
+📱 ثبتي تطبيق مرسم لولو
+
+</button>
+
+<h1>
+مرسم لولو
+</h1>
+
+
+<p>
+عالم صغير للرسم والإبداع ✨
+</p>
+
+
+
+<div id="installWarning" class="warning" style="display:none;"></div>
+<div id="installStatus" class="status" style="display:none;"></div>
+
+<div class="card">
+
+
+<h2>
+ما اسم الفنانة الصغيرة؟ 🌸
+</h2>
+
+<label for="childName" class="input-label">اسم الفنانة الصغيرة</label>
+
+<input 
+ id="childName"
+ type="text"
+ placeholder="اكتبي اسمك هنا">
+
+
+<button onclick="saveName()">
+
+ابدئي المغامرة 🎨
+
+</button>
+
+</div>
+
+
+
+<div class="menu">
+
+
+<a href="studio.html">
+
+🎨 الرسم
+
+</a>
+
+
+
+<a href="gallery.html">
+
+🖼️ لوحاتي
+
+</a>
+
+
+
+<a href="reward.html">
+
+🏆 جوائزي
+
+</a>
+
+<a href="parent.html">
+
+🔒 للوالدين
+
+</a>
+
+
+
+<a href="settings.html">
+
+⚙️ الإعدادات
+
+</a>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+  <script src="storage.js"></script>
+  <script src="js/install.js"></script>
+  <script src="js/origin-warning.js"></script>
+
+  <script>
+  function saveName() {
+    let name = document.getElementById("childName").value;
+    if (name.trim() == "") {
+      name = "لولو";
+    }
+    localStorage.setItem("childName", name);
+    location.href = "studio.html";
+  }
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service-worker.js").catch((error) => {
+      console.error("Service Worker registration failed:", error);
+    });
+  }
+  </script>
+
+</body>
+
+
+
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>⚙️ الإعدادات</title>
+
+<link rel="stylesheet" href="css/style.css">
+
+</head>
+
+
+<body>
+
+
+<div class="app">
+
+
+<div class="page">
+
+
+<h1 class="page-title">
+⚙️ إعدادات
+</h1>
+
+
+<h2>
+اسم الفنانة:
+</h2>
+
+<div id="settingsStatus" class="status" style="display:none;"></div>
+
+<label for="newName" class="input-label">اسم الفنانة</label>
+<input id="newName">
+
+
+<br>
+
+
+<button onclick="changeName()">
+
+حفظ الاسم 💖
+
+</button>
+
+
+<br><br>
+
+
+<button onclick="resetAll()">
+
+حذف كل اللوحات 🗑️
+
+</button>
+
+
+<br>
+
+
+<a class="button-small" href="index.html">
+🏠 الرئيسية
+</a>
+
+
+</div>
+
+
+</div>
+
+
+
+<script src="storage.js"></script>
+<script src="js/origin-warning.js"></script>
+
+<script>
+
+
+document.getElementById("newName").value=
+getChildName();
+
+
+
+function changeName(){
+    setChildName(document.getElementById("newName").value);
+    showSettingsStatus("تم تغيير الاسم 🌸");
+}
+
+
+
+
+function resetAll(){
+    if(confirm("هل تريدين حذف كل اللوحات؟")){
+        clearDrawings();
+        showSettingsStatus("تم حذف جميع اللوحات.");
+    }
+
+
+
+}
+
+
+</script>
+
+
+
+</body>
+
+</html>
