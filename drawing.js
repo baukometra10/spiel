@@ -2,6 +2,67 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const upload = document.getElementById("upload");
 
+let audioContext;
+let audioReady = false;
+
+function initAudio() {
+  if (audioReady) return;
+  if (window.AudioContext || window.webkitAudioContext) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioContext.state === "suspended") {
+      audioContext.resume();
+    }
+    audioReady = true;
+  }
+}
+
+document.addEventListener("click", initAudio, { once: true });
+
+title = "";
+
+function playTone(frequency, duration = 0.12, type = "sine") {
+  if (!window.AudioContext && !window.webkitAudioContext) return;
+  initAudio();
+  if (!audioContext) return;
+  const oscillator = audioContext.createOscillator();
+  const gain = audioContext.createGain();
+  oscillator.type = type;
+  oscillator.frequency.value = frequency;
+  oscillator.connect(gain);
+  gain.connect(audioContext.destination);
+  gain.gain.setValueAtTime(0.001, audioContext.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.18, audioContext.currentTime + 0.01);
+  oscillator.start(audioContext.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+  oscillator.stop(audioContext.currentTime + duration + 0.02);
+}
+
+function playSound(name) {
+  switch (name) {
+    case "select":
+      playTone(700, 0.08, "triangle");
+      break;
+    case "save":
+      playTone(880, 0.14, "sine");
+      break;
+    case "clear":
+      playTone(420, 0.12, "square");
+      break;
+    case "upload":
+      playTone(740, 0.1, "triangle");
+      break;
+    case "sticker":
+      playTone(560, 0.1, "triangle");
+      break;
+    case "error":
+      playTone(240, 0.18, "sawtooth");
+      break;
+    default:
+      playTone(620, 0.08, "sine");
+      break;
+  }
+}
+
 const tool = {
   color: "#ff69b4",
   size: 8,
@@ -128,29 +189,34 @@ function pencil() {
   tool.size = 8;
   tool.rainbow = false;
   tool.eraser = false;
+  playSound("select");
 }
 
 function rainbow() {
   tool.rainbow = true;
   tool.eraser = false;
   tool.size = 12;
+  playSound("select");
 }
 
 function eraser() {
   tool.eraser = true;
   tool.rainbow = false;
   tool.size = 20;
+  playSound("select");
 }
 
 function setColor(color) {
   tool.color = color;
   tool.rainbow = false;
   tool.eraser = false;
+  playSound("select");
 }
 
 function setSize(size) {
   tool.size = size;
   tool.eraser = false;
+  playSound("select");
 }
 
 function addSticker(type) {
@@ -159,6 +225,7 @@ function addSticker(type) {
   const x = (canvas.width - width) / 2;
   const y = (canvas.height - height) / 2;
   drawSticker(type, x, y, width, height);
+  playSound("sticker");
 }
 
 function drawSticker(type, x, y, width, height) {
@@ -329,6 +396,7 @@ function clearCanvas() {
   currentTemplate = null;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBackground();
+  playSound("clear");
 }
 
 function drawTemplate() {
@@ -350,6 +418,11 @@ function loadTemplate(src) {
     currentTemplate = image;
     drawBackground();
     showStudioStatus("تم تحميل الرسم للتلوين 🎉");
+    playSound("select");
+  };
+  image.onerror = () => {
+    showStudioStatus("فشل تحميل الرسم. حاول مرة أخرى.");
+    playSound("error");
   };
   image.src = src;
 }
@@ -389,9 +462,15 @@ function saveDrawing() {
   addDrawing(image);
   celebrateSave();
   showStudioStatus("تم حفظ اللوحة 🌟");
+  playSound("save");
 }
 
 function loadUploadImage() {
+  if (!upload) {
+    showStudioStatus("لا يوجد حقل رفع الآن.");
+    playSound("error");
+    return;
+  }
   const file = upload.files[0];
   if (!file) return;
 
@@ -407,6 +486,7 @@ function loadUploadImage() {
       drawBackground();
       ctx.drawImage(image, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
       showStudioStatus("تم تحميل صورتك للتلوين 🎉");
+      playSound("upload");
     };
     image.src = reader.result;
   };
