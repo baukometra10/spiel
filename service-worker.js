@@ -55,22 +55,22 @@ const FILES = [
 "./icons/icon-512.png",
 
 
-"./butterfly.png",
+"./butterfly.svg",
 
 
-"./castle.png",
+"./castle.svg",
 
 
-"./cat.png",
+"./cat.svg",
 
 
-"./unicorn.png",
+"./unicorn.svg",
 
 
-"./rainbow.png",
+"./rainbow.svg",
 
 
-"./princess.png"
+"./princess.svg"
 
 
 ];
