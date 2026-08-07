@@ -4,6 +4,10 @@ const drawingCount = document.getElementById("drawingCount");
 function renderGallery() {
   const drawings = getDrawings();
   drawingCount.innerText = drawings.length;
+  const starCount = document.getElementById("starCount");
+  if (starCount) {
+    starCount.innerText = getStars();
+  }
 
   if (!drawings.length) {
     gallery.innerHTML = "<div class=\"gallery-empty\">لا توجد لوحات محفوظة بعد. اذهبي إلى غرفة الرسم لإنشاء لوحة جديدة!<br><br><a class=\"button-small\" href=\"studio.html\">🎨 بدء الرسم الآن</a></div>";
@@ -36,6 +40,7 @@ function clearGallery() {
   }
   clearDrawings();
   renderGallery();
+  alert("تم حذف كل اللوحات. يمكنك البدء من جديد!");
 }
 
 function deleteDrawing(index) {

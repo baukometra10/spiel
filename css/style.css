@@ -443,7 +443,7 @@ margin:20px 0;
 
 .template-buttons{
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 12px;
   margin-bottom: 14px;
 }
@@ -453,7 +453,8 @@ margin:20px 0;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  padding: 12px;
+  padding: 14px;
+  min-height: 170px;
   border-radius: 22px;
   border: 2px solid #f5d7ec;
   background: #ffffff;
@@ -462,16 +463,10 @@ margin:20px 0;
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.template-card:hover {
-  transform: translateY(-2px);
-  border-color: #ff9ef5;
-  box-shadow: 0 12px 24px rgba(255, 166, 214, 0.25);
-}
-
 .template-card img {
   width: 100%;
   max-width: 120px;
-  height: 80px;
+  height: 100px;
   object-fit: contain;
   border-radius: 16px;
   background: #fff7ff;
@@ -480,6 +475,14 @@ margin:20px 0;
 .template-card span {
   color: #8b2860;
   font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+}
+
+.template-card:hover {
+  transform: translateY(-2px);
+  border-color: #ff9ef5;
+  box-shadow: 0 12px 24px rgba(255, 166, 214, 0.25);
 }
 
 .action-banner {
@@ -566,26 +569,20 @@ margin:20px 0;
 }
 
 .tool{
+  background:#ffd6ea;
+  color:#8b2860;
+  padding:12px 14px;
+  border-radius:20px;
+  cursor:pointer;
+  font-size:18px;
+  border:none;
+  min-width: 120px;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
 
-
-background:#ffd6ea;
-
-
-color:#8b2860;
-
-
-padding:12px;
-
-
-border-radius:20px;
-
-
-cursor:pointer;
-
-
-font-size:18px;
-
-
+.tool:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(255, 105, 180, 0.18);
 }
 
 .warning{
@@ -770,6 +767,22 @@ border:
 
   .gallery-footer {
     grid-template-columns: 1fr;
+  }
+
+  .toolbar,
+  .gallery-actions {
+    flex-direction: column;
+  }
+
+  .tool,
+  .button-small {
+    width: 100%;
+  }
+
+  .sticker-grid,
+  .background-buttons,
+  .color-buttons {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 

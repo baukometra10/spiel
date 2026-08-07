@@ -4,6 +4,7 @@ const upload = document.getElementById("upload");
 
 let audioContext;
 let audioReady = false;
+let soundEnabled = localStorage.getItem("soundEnabled") !== "0";
 
 function initAudio() {
   if (audioReady) return;
@@ -17,8 +18,6 @@ function initAudio() {
 }
 
 document.addEventListener("click", initAudio, { once: true });
-
-title = "";
 
 function playTone(frequency, duration = 0.12, type = "sine") {
   if (!window.AudioContext && !window.webkitAudioContext) return;
@@ -37,7 +36,22 @@ function playTone(frequency, duration = 0.12, type = "sine") {
   oscillator.stop(audioContext.currentTime + duration + 0.02);
 }
 
+function updateSoundButtonLabel() {
+  const button = document.querySelector(".sound-toggle");
+  if (button) {
+    button.textContent = soundEnabled ? "🔊 صوت" : "🔇 كتم";
+  }
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  updateSoundButtonLabel();
+  localStorage.setItem("soundEnabled", soundEnabled ? "1" : "0");
+  showStudioStatus(soundEnabled ? "الصوت مفعل" : "الصوت معطل");
+}
+
 function playSound(name) {
+  if (!soundEnabled) return;
   switch (name) {
     case "select":
       playTone(700, 0.08, "triangle");
@@ -57,6 +71,9 @@ function playSound(name) {
     case "error":
       playTone(240, 0.18, "sawtooth");
       break;
+    case "magic":
+      playTone(960, 0.08, "sine");
+      break;
     default:
       playTone(620, 0.08, "sine");
       break;
@@ -68,6 +85,7 @@ const tool = {
   size: 8,
   rainbow: false,
   eraser: false,
+  magic: false,
 };
 
 let drawing = false;
@@ -177,11 +195,29 @@ function draw(event) {
     ctx.strokeStyle = tool.rainbow ? `hsl(${Math.floor(Math.random() * 360)}, 100%, 65%)` : tool.color;
   }
 
-  ctx.beginPath();
-  ctx.moveTo(lastX, lastY);
-  ctx.lineTo(x, y);
-  ctx.stroke();
+  if (tool.magic) {
+    drawMagic(x, y);
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  }
+
   [lastX, lastY] = [x, y];
+}
+
+function drawMagic(x, y) {
+  const stars = Math.max(3, Math.round(tool.size / 2));
+  for (let i = 0; i < stars; i++) {
+    const offsetX = (Math.random() - 0.5) * tool.size * 3;
+    const offsetY = (Math.random() - 0.5) * tool.size * 3;
+    const size = Math.max(1, tool.size / 3 + Math.random() * 3);
+    ctx.fillStyle = tool.rainbow ? `hsl(${Math.floor(Math.random() * 360)}, 100%, 70%)` : tool.color;
+    ctx.beginPath();
+    ctx.arc(x + offsetX, y + offsetY, size, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 function pencil() {
@@ -189,12 +225,14 @@ function pencil() {
   tool.size = 8;
   tool.rainbow = false;
   tool.eraser = false;
+  tool.magic = false;
   playSound("select");
 }
 
 function rainbow() {
   tool.rainbow = true;
   tool.eraser = false;
+  tool.magic = false;
   tool.size = 12;
   playSound("select");
 }
@@ -202,20 +240,31 @@ function rainbow() {
 function eraser() {
   tool.eraser = true;
   tool.rainbow = false;
+  tool.magic = false;
   tool.size = 20;
   playSound("select");
+}
+
+function magicBrush() {
+  tool.magic = true;
+  tool.eraser = false;
+  tool.rainbow = true;
+  tool.size = 14;
+  playSound("magic");
 }
 
 function setColor(color) {
   tool.color = color;
   tool.rainbow = false;
   tool.eraser = false;
+  tool.magic = false;
   playSound("select");
 }
 
 function setSize(size) {
   tool.size = size;
   tool.eraser = false;
+  tool.magic = false;
   playSound("select");
 }
 
@@ -473,6 +522,11 @@ function loadUploadImage() {
   }
   const file = upload.files[0];
   if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    showStudioStatus("الملف غير مدعوم. اختر صورة.");
+    playSound("error");
+    return;
+  }
 
   const reader = new FileReader();
   reader.onload = () => {
@@ -501,6 +555,10 @@ window.addEventListener("resize", () => {
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
   };
   image.src = snapshot;
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  updateSoundButtonLabel();
 });
 
 canvas.addEventListener("mousedown", startDrawing);
