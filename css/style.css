@@ -1278,6 +1278,16 @@ fall 4s linear;
   display: none;
 }
 
+.daily-gift-card {
+  border: 3px solid #ffd166;
+  background: linear-gradient(180deg, #fff, #fff8e7);
+}
+
+.daily-gift-card .unlock-emoji {
+  font-size: 64px;
+  animation: clap 0.7s ease infinite alternate;
+}
+
 @keyframes fall{
 
 

@@ -31,6 +31,7 @@ function renderGallery() {
         <div class="gallery-meta">
           <span>✨ ${drawing.date}</span>
           <div class="gallery-actions">
+            <button class="button-small" onclick="shareDrawing(${index})">مشاركة</button>
             <button class="button-small" onclick="downloadDrawing(${index})">تنزيل</button>
             <button class="button-small danger" onclick="deleteDrawing(${index})">حذف</button>
           </div>
@@ -58,22 +59,49 @@ function deleteDrawing(index) {
   renderGallery();
 }
 
-function downloadDrawing(index) {
+async function downloadDrawing(index) {
   const drawings = getDrawings();
   if (index < 0 || index >= drawings.length) {
     return;
   }
   const drawing = drawings[index];
-  const safeDate = drawing.date
-    ? drawing.date.replace(/[\W_]+/g, "-").replace(/^-+|-+$/g, "")
-    : `${index + 1}`;
-  const link = document.createElement("a");
-  link.href = drawing.image;
-  const isJpeg = String(drawing.image).startsWith("data:image/jpeg");
-  link.download = `لوحة-${safeDate}.${isJpeg ? "jpg" : "png"}`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  try {
+    const framed = await createFramedArtwork(drawing.image, getChildName());
+    const safeDate = drawing.date
+      ? drawing.date.replace(/[\W_]+/g, "-").replace(/^-+|-+$/g, "")
+      : `${index + 1}`;
+    const link = document.createElement("a");
+    link.href = framed;
+    link.download = `لوحة-كوكو-${safeDate}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (error) {
+    const link = document.createElement("a");
+    link.href = drawing.image;
+    link.download = `لوحة-${index + 1}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+}
+
+async function shareDrawing(index) {
+  const drawings = getDrawings();
+  if (index < 0 || index >= drawings.length) {
+    return;
+  }
+  try {
+    const result = await shareArtwork(drawings[index].image, getChildName());
+    if (result === "shared") {
+      alert("تم إرسال اللوحة 💖");
+    } else if (result === "downloaded") {
+      alert("تم تنزيل اللوحة بإطار جميل للمشاركة 🖼️");
+    }
+  } catch (error) {
+    if (error && error.name === "AbortError") return;
+    alert("تعذر المشاركة الآن.");
+  }
 }
 
 window.addEventListener("DOMContentLoaded", renderGallery);

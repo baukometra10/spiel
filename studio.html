@@ -36,6 +36,13 @@
   </div>
 </div>
 
+<div id="dailyGiftOverlay" class="unlock-overlay" hidden>
+  <div class="unlock-card daily-gift-card">
+    <h2>مفاجأة اليوم! 🎁</h2>
+    <div id="dailyGiftBody" class="unlock-list"></div>
+  </div>
+</div>
+
 <p>أهلاً يا <span id="name"></span> 🌸</p>
 
 <div class="panel-group">
@@ -43,32 +50,49 @@
   <p class="help-text">اختر رسمة جاهزة أو ارفع صورتك ثم استخدم الألوان لتلوينها.</p>
   <div class="template-buttons">
       <button type="button" class="template-card" onclick="loadTemplate('flower.svg')">
-        <img src="flower.svg" alt="زهرة">
-        <span>زهرة</span>
+        <img src="flower.svg" alt="زهرة"><span>زهرة</span>
       </button>
       <button type="button" class="template-card" onclick="loadTemplate('butterfly.svg')">
-        <img src="butterfly.svg" alt="فراشة">
-        <span>فراشة</span>
+        <img src="butterfly.svg" alt="فراشة"><span>فراشة</span>
       </button>
       <button type="button" class="template-card" onclick="loadTemplate('cat.svg')">
-        <img src="cat.svg" alt="قطة">
-        <span>قطة</span>
+        <img src="cat.svg" alt="قطة"><span>قطة</span>
+      </button>
+      <button type="button" class="template-card" onclick="loadTemplate('dog.svg')">
+        <img src="dog.svg" alt="كلب"><span>كلب</span>
+      </button>
+      <button type="button" class="template-card" onclick="loadTemplate('fish.svg')">
+        <img src="fish.svg" alt="سمكة"><span>سمكة</span>
+      </button>
+      <button type="button" class="template-card" onclick="loadTemplate('teddy.svg')">
+        <img src="teddy.svg" alt="دبدوب"><span>دبدوب</span>
       </button>
       <button type="button" class="template-card" onclick="loadTemplate('castle.svg')">
-        <img src="castle.svg" alt="قلعة">
-        <span>قلعة</span>
+        <img src="castle.svg" alt="قلعة"><span>قلعة</span>
       </button>
       <button type="button" class="template-card" onclick="loadTemplate('unicorn.svg')">
-        <img src="unicorn.svg" alt="يونيكورن">
-        <span>يونيكورن</span>
+        <img src="unicorn.svg" alt="يونيكورن"><span>يونيكورن</span>
       </button>
       <button type="button" class="template-card" onclick="loadTemplate('princess.svg')">
-        <img src="princess.svg" alt="أميرة">
-        <span>أميرة</span>
+        <img src="princess.svg" alt="أميرة"><span>أميرة</span>
       </button>
       <button type="button" class="template-card" onclick="loadTemplate('rainbow.svg')">
-        <img src="rainbow.svg" alt="قوس قزح">
-        <span>قوس قزح</span>
+        <img src="rainbow.svg" alt="قوس قزح"><span>قوس قزح</span>
+      </button>
+      <button type="button" class="template-card" onclick="loadTemplate('car.svg')">
+        <img src="car.svg" alt="سيارة"><span>سيارة</span>
+      </button>
+      <button type="button" class="template-card" onclick="loadTemplate('heart.svg')">
+        <img src="heart.svg" alt="قلب"><span>قلب</span>
+      </button>
+      <button type="button" class="template-card" onclick="loadTemplate('icecream.svg')">
+        <img src="icecream.svg" alt="آيس كريم"><span>آيس كريم</span>
+      </button>
+      <button type="button" class="template-card" onclick="loadTemplate('sun.svg')">
+        <img src="sun.svg" alt="شمس"><span>شمس</span>
+      </button>
+      <button type="button" class="template-card" onclick="loadTemplate('balloon.svg')">
+        <img src="balloon.svg" alt="بالون"><span>بالون</span>
       </button>
     </div>
     <p class="help-text">انقر على أي رسمة لتحميلها في اللوحة ثم ابدأ التلوين.</p>
@@ -92,6 +116,7 @@
 <button class="tool sound-toggle" onclick="toggleSound()">🔊 صوت</button>
 <button class="tool" onclick="clearCanvas()">🧹 مسح</button>
 <button class="tool tool-save" onclick="saveDrawing()">💾 حفظ</button>
+<button class="tool" onclick="shareCurrentDrawing()">📤 مشاركة</button>
 </div>
 
 <div class="panel">
@@ -145,6 +170,7 @@
 </div>
 
 <script src="storage.js"></script>
+<script src="js/koko-voice.js"></script>
 <script src="js/origin-warning.js"></script>
 <script src="drawing.js"></script>
 <script>

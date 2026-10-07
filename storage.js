@@ -7,6 +7,21 @@ const RARE_STICKERS = {
   rocket: { emoji: "🚀", unlockAt: 30, label: "صاروخ" },
 };
 
+const BONUS_STICKERS = {
+  giftbox: { emoji: "🎁", label: "هدية اليوم" },
+  candy: { emoji: "🍭", label: "حلوى" },
+  balloonGift: { emoji: "🎈", label: "بالون" },
+  chick: { emoji: "🐥", label: "كتكوت" },
+};
+
+const DAILY_GIFT_POOL = [
+  { kind: "sticker", id: "giftbox" },
+  { kind: "sticker", id: "candy" },
+  { kind: "sticker", id: "balloonGift" },
+  { kind: "sticker", id: "chick" },
+  { kind: "stars", amount: 2 },
+];
+
 const LEVELS = [
   { min: 0, title: "🌱 مبتدئة", nextAt: 5 },
   { min: 5, title: "🌸 فنانة صغيرة", nextAt: 15 },
@@ -202,5 +217,139 @@ function clearAllData() {
   localStorage.removeItem("childName");
   localStorage.removeItem("unlockedStickers");
   localStorage.removeItem("soundEnabled");
+  localStorage.removeItem("dailyGiftDate");
+  localStorage.removeItem("bonusStickers");
   clearParentPin();
+}
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+
+function isDailyGiftAvailable() {
+  return localStorage.getItem("dailyGiftDate") !== todayKey();
+}
+
+function getBonusStickers() {
+  try {
+    return JSON.parse(localStorage.getItem("bonusStickers") || "[]");
+  } catch (error) {
+    localStorage.removeItem("bonusStickers");
+    return [];
+  }
+}
+
+function addBonusSticker(id) {
+  const list = getBonusStickers();
+  if (!list.includes(id)) {
+    list.push(id);
+    localStorage.setItem("bonusStickers", JSON.stringify(list));
+  }
+  return list;
+}
+
+function claimDailyGift() {
+  if (!isDailyGiftAvailable()) {
+    return null;
+  }
+  const pick = DAILY_GIFT_POOL[Math.floor(Math.random() * DAILY_GIFT_POOL.length)];
+  localStorage.setItem("dailyGiftDate", todayKey());
+
+  if (pick.kind === "stars") {
+    const stars = getStars() + (pick.amount || 1);
+    setStars(stars);
+    unlockStickersForStars(stars);
+    return {
+      kind: "stars",
+      amount: pick.amount || 1,
+      label: `${pick.amount || 1} نجوم إضافية`,
+      emoji: "⭐",
+    };
+  }
+
+  addBonusSticker(pick.id);
+  const meta = BONUS_STICKERS[pick.id];
+  return {
+    kind: "sticker",
+    id: pick.id,
+    label: meta.label,
+    emoji: meta.emoji,
+  };
+}
+
+function createFramedArtwork(dataUrl, artistName) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const pad = 36;
+      const footer = 48;
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width + pad * 2;
+      canvas.height = img.height + pad * 2 + footer;
+      const g = canvas.getContext("2d");
+
+      const bg = g.createLinearGradient(0, 0, canvas.width, canvas.height);
+      bg.addColorStop(0, "#ffe5f1");
+      bg.addColorStop(0.5, "#fff5d7");
+      bg.addColorStop(1, "#e8f7ff");
+      g.fillStyle = bg;
+      g.fillRect(0, 0, canvas.width, canvas.height);
+
+      g.fillStyle = "#ffffff";
+      g.fillRect(pad - 10, pad - 10, img.width + 20, img.height + 20);
+      g.strokeStyle = "#ff69b4";
+      g.lineWidth = 6;
+      g.strokeRect(pad - 10, pad - 10, img.width + 20, img.height + 20);
+
+      g.drawImage(img, pad, pad);
+
+      g.fillStyle = "#c2185b";
+      g.font = "bold 22px Tahoma, Arial, sans-serif";
+      g.textAlign = "center";
+      g.fillText(`مرسم كوكو — ${artistName || "لولو"} ✨`, canvas.width / 2, canvas.height - 16);
+
+      try {
+        resolve(canvas.toDataURL("image/jpeg", 0.9));
+      } catch (error) {
+        resolve(canvas.toDataURL("image/png"));
+      }
+    };
+    img.onerror = () => reject(new Error("framed image failed"));
+    img.src = dataUrl;
+  });
+}
+
+async function shareArtwork(dataUrl, artistName) {
+  const framed = await createFramedArtwork(dataUrl, artistName);
+  const res = await fetch(framed);
+  const blob = await res.blob();
+  const file = new File([blob], `koko-${Date.now()}.jpg`, { type: blob.type || "image/jpeg" });
+  const title = `لوحة ${artistName || "لولو"} من مرسم كوكو`;
+
+  if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+    await navigator.share({
+      files: [file],
+      title,
+      text: title,
+    });
+    return "shared";
+  }
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, text: title, url: framed });
+      return "shared";
+    } catch (error) {
+      if (error && error.name === "AbortError") return "cancelled";
+    }
+  }
+
+  const link = document.createElement("a");
+  link.href = framed;
+  link.download = `لوحة-كوكو-${artistName || "فنانة"}.jpg`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  return "downloaded";
 }

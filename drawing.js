@@ -85,6 +85,9 @@ function toggleSound() {
   soundEnabled = !soundEnabled;
   updateSoundButtonLabel();
   localStorage.setItem("soundEnabled", soundEnabled ? "1" : "0");
+  if (!soundEnabled && window.speechSynthesis) {
+    speechSynthesis.cancel();
+  }
   showStudioStatus(soundEnabled ? "الصوت مفعل" : "الصوت معطل");
 }
 
@@ -355,6 +358,9 @@ function startDrawing(event) {
     pushHistory();
     playSound("fill");
     showStudioStatus("تم التلوين 🪣✨");
+    if (typeof kokoPraise === "function") {
+      kokoPraise("fill", getChildName());
+    }
     return;
   }
 
@@ -526,8 +532,14 @@ function setSize(size) {
 
 function addSticker(type) {
   const unlocked = getUnlockedStickers();
+  const bonus = getBonusStickers();
   if (RARE_STICKERS[type] && !unlocked.includes(type)) {
     showStudioStatus("هذا الملصق مقفل 🔒 اجمعي نجوماً أكثر!");
+    playSound("error");
+    return;
+  }
+  if (BONUS_STICKERS[type] && !bonus.includes(type)) {
+    showStudioStatus("افتحي هدية اليوم أولاً 🎁");
     playSound("error");
     return;
   }
@@ -689,12 +701,13 @@ function drawSticker(type, x, y, width, height) {
     return;
   }
 
-  // Rare unlockable stickers as emoji-style drawings
-  if (RARE_STICKERS[type]) {
+  // Rare / bonus stickers as emoji-style drawings
+  const stickerMeta = RARE_STICKERS[type] || BONUS_STICKERS[type];
+  if (stickerMeta) {
     ctx.font = `${Math.floor(width * 0.7)}px serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(RARE_STICKERS[type].emoji, x + width / 2, y + height / 2);
+    ctx.fillText(stickerMeta.emoji, x + width / 2, y + height / 2);
     ctx.restore();
     return;
   }
@@ -762,6 +775,7 @@ function showStudioStatus(message) {
 }
 
 function celebrateSave(name) {
+  const child = name || getChildName();
   const container = document.getElementById("confettiContainer");
   if (container) {
     const colors = ["#ff69b4", "#ffd166", "#4d8cff", "#34c759", "#ff9ef5", "#ff7a7a", "#fff"];
@@ -782,8 +796,8 @@ function celebrateSave(name) {
 
   const overlay = document.getElementById("celebrationOverlay");
   const messageEl = document.getElementById("celebrationMessage");
+  const praise = PRAISE[Math.floor(Math.random() * PRAISE.length)](child);
   if (overlay && messageEl) {
-    const praise = PRAISE[Math.floor(Math.random() * PRAISE.length)](name || getChildName());
     messageEl.textContent = praise;
     overlay.hidden = false;
     overlay.classList.add("is-visible");
@@ -791,6 +805,9 @@ function celebrateSave(name) {
       overlay.classList.remove("is-visible");
       overlay.hidden = true;
     }, 2800);
+  }
+  if (typeof kokoSpeak === "function") {
+    kokoSpeak(praise);
   }
 }
 
@@ -819,7 +836,8 @@ function renderRareStickers() {
   const row = document.getElementById("rareStickers");
   if (!row) return;
   const unlocked = getUnlockedStickers();
-  row.innerHTML = Object.keys(RARE_STICKERS)
+  const bonus = getBonusStickers();
+  const rareHtml = Object.keys(RARE_STICKERS)
     .map((id) => {
       const meta = RARE_STICKERS[id];
       const isOpen = unlocked.includes(id);
@@ -829,6 +847,69 @@ function renderRareStickers() {
       return `<button type="button" class="sticker-button locked" disabled aria-label="مقفل">${meta.emoji}<span class="lock-badge">🔒</span></button>`;
     })
     .join("");
+  const bonusHtml = Object.keys(BONUS_STICKERS)
+    .map((id) => {
+      const meta = BONUS_STICKERS[id];
+      if (bonus.includes(id)) {
+        return `<button type="button" class="sticker-button unlocked" onclick="addSticker('${id}')" aria-label="${meta.label}">${meta.emoji}</button>`;
+      }
+      return "";
+    })
+    .join("");
+  row.innerHTML = rareHtml + bonusHtml;
+}
+
+function showDailyGiftOverlay(gift) {
+  if (!gift) return;
+  const overlay = document.getElementById("dailyGiftOverlay");
+  const body = document.getElementById("dailyGiftBody");
+  if (!overlay || !body) return;
+  body.innerHTML = `<div class="unlock-emoji">${gift.emoji}</div><p>${gift.label}</p>`;
+  overlay.hidden = false;
+  overlay.classList.add("is-visible");
+  playSound("unlock");
+  if (typeof kokoPraise === "function") {
+    kokoPraise("daily", getChildName());
+  }
+  setTimeout(() => {
+    overlay.classList.remove("is-visible");
+    overlay.hidden = true;
+  }, 3500);
+  renderRareStickers();
+}
+
+function tryClaimDailyGift() {
+  if (typeof claimDailyGift !== "function" || !isDailyGiftAvailable()) {
+    return;
+  }
+  const gift = claimDailyGift();
+  if (gift) {
+    showDailyGiftOverlay(gift);
+  }
+}
+
+async function shareCurrentDrawing() {
+  try {
+    let image;
+    try {
+      image = canvas.toDataURL("image/jpeg", 0.9);
+    } catch (error) {
+      image = canvas.toDataURL("image/png");
+    }
+    const result = await shareArtwork(image, getChildName());
+    if (result === "shared") {
+      showStudioStatus("تم الإرسال لماما أو بابا 💖");
+      if (typeof kokoSpeak === "function") {
+        kokoSpeak(`أحسنتِ يا ${getChildName()}! شاركتِ لوحتك`);
+      }
+    } else if (result === "downloaded") {
+      showStudioStatus("تم تنزيل اللوحة بإطار جميل 🖼️");
+    }
+  } catch (error) {
+    if (error && error.name === "AbortError") return;
+    showStudioStatus("تعذر المشاركة الآن.");
+    playSound("error");
+  }
 }
 
 function saveDrawing() {
@@ -909,6 +990,12 @@ document.addEventListener("DOMContentLoaded", () => {
   updateSoundButtonLabel();
   renderRareStickers();
   updateUndoRedoButtons();
+  setTimeout(() => {
+    tryClaimDailyGift();
+  }, 700);
+  if (typeof kokoPraise === "function") {
+    setTimeout(() => kokoPraise("welcome", getChildName()), 1200);
+  }
 });
 
 canvas.addEventListener("mousedown", startDrawing);

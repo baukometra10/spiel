@@ -1,4 +1,4 @@
-const CACHE_NAME = "koko-painter-v4";
+const CACHE_NAME = "koko-painter-v5";
 
 const FILES = [
   "./",
@@ -15,6 +15,7 @@ const FILES = [
   "./js/gallery.js",
   "./js/origin-warning.js",
   "./js/welcome-magic.js",
+  "./js/koko-voice.js",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -26,6 +27,14 @@ const FILES = [
   "./unicorn.svg",
   "./rainbow.svg",
   "./princess.svg",
+  "./dog.svg",
+  "./fish.svg",
+  "./car.svg",
+  "./heart.svg",
+  "./icecream.svg",
+  "./sun.svg",
+  "./teddy.svg",
+  "./balloon.svg",
 ];
 
 self.addEventListener("install", (event) => {
