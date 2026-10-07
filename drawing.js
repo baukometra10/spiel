@@ -859,23 +859,93 @@ function renderRareStickers() {
   row.innerHTML = rareHtml + bonusHtml;
 }
 
+let dailyGiftHideTimer = null;
+
+function burstConfetti(count = 50) {
+  const container = document.getElementById("confettiContainer");
+  if (!container) return;
+  const colors = ["#ff69b4", "#ffd166", "#4d8cff", "#34c759", "#ff9ef5", "#ff7a7a", "#fff"];
+  for (let i = 0; i < count; i++) {
+    const piece = document.createElement("div");
+    piece.className = "confetti-piece";
+    piece.style.background = colors[i % colors.length];
+    piece.style.left = `${Math.random() * 100}%`;
+    piece.style.top = `${Math.random() * 15 - 5}%`;
+    piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+    piece.style.width = `${8 + Math.random() * 12}px`;
+    piece.style.height = `${8 + Math.random() * 12}px`;
+    piece.style.animationDuration = `${800 + Math.random() * 900}ms`;
+    container.appendChild(piece);
+    setTimeout(() => piece.remove(), 2000);
+  }
+}
+
+function applyDailyGiftEvent(gift) {
+  if (!gift) return;
+
+  if (gift.kind === "sticker" && gift.id) {
+    const width = canvas.width * 0.28;
+    const height = canvas.height * 0.28;
+    const x = canvas.width * 0.1 + Math.random() * canvas.width * 0.5;
+    const y = canvas.height * 0.1 + Math.random() * canvas.height * 0.45;
+    drawSticker(gift.id, x, y, width, height);
+    pushHistory();
+    showStudioStatus(`وضعتُ ${gift.label} على لوحتك! 🎁`);
+  } else if (gift.kind === "stars") {
+    showStudioStatus(`ربحتِ ${gift.amount || 1} نجوم إضافية! ⭐`);
+  }
+
+  renderRareStickers();
+}
+
+function hideDailyGiftOverlay() {
+  const overlay = document.getElementById("dailyGiftOverlay");
+  if (!overlay) return;
+  overlay.classList.remove("is-visible");
+  overlay.setAttribute("hidden", "");
+  if (dailyGiftHideTimer) {
+    clearTimeout(dailyGiftHideTimer);
+    dailyGiftHideTimer = null;
+  }
+}
+
 function showDailyGiftOverlay(gift) {
   if (!gift) return;
   const overlay = document.getElementById("dailyGiftOverlay");
   const body = document.getElementById("dailyGiftBody");
   if (!overlay || !body) return;
-  body.innerHTML = `<div class="unlock-emoji">${gift.emoji}</div><p>${gift.label}</p>`;
-  overlay.hidden = false;
+
+  const title =
+    gift.kind === "stars"
+      ? `+${gift.amount || 1} نجوم!`
+      : "ملصق جديد على اللوحة!";
+
+  body.innerHTML = `
+    <div class="unlock-emoji daily-gift-emoji">${gift.emoji}</div>
+    <p class="daily-gift-title">${title}</p>
+    <p>${gift.label}</p>
+  `;
+
+  overlay.removeAttribute("hidden");
+  // force reflow so CSS transition plays
+  void overlay.offsetWidth;
   overlay.classList.add("is-visible");
+
+  burstConfetti(55);
   playSound("unlock");
+  playFanfare();
+  applyDailyGiftEvent(gift);
+
   if (typeof kokoPraise === "function") {
     kokoPraise("daily", getChildName());
   }
-  setTimeout(() => {
-    overlay.classList.remove("is-visible");
-    overlay.hidden = true;
-  }, 3500);
-  renderRareStickers();
+
+  if (dailyGiftHideTimer) clearTimeout(dailyGiftHideTimer);
+  dailyGiftHideTimer = setTimeout(() => {
+    hideDailyGiftOverlay();
+  }, 3200);
+
+  overlay.onclick = () => hideDailyGiftOverlay();
 }
 
 function tryClaimDailyGift() {

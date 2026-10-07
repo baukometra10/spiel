@@ -1036,20 +1036,28 @@ fall 4s linear;
   position: fixed;
   inset: 0;
   z-index: 10000;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   background: rgba(255, 120, 180, 0.28);
   backdrop-filter: blur(2px);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.3s ease;
 }
 
 .celebration-overlay.is-visible,
 .unlock-overlay.is-visible {
+  display: flex;
   opacity: 1;
   pointer-events: auto;
+}
+
+.celebration-overlay[hidden],
+.unlock-overlay[hidden] {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 .celebration-card,
@@ -1281,11 +1289,20 @@ fall 4s linear;
 .daily-gift-card {
   border: 3px solid #ffd166;
   background: linear-gradient(180deg, #fff, #fff8e7);
+  animation: pop-in 0.45s ease;
 }
 
-.daily-gift-card .unlock-emoji {
-  font-size: 64px;
+.daily-gift-card .unlock-emoji,
+.daily-gift-emoji {
+  font-size: 72px;
   animation: clap 0.7s ease infinite alternate;
+}
+
+.daily-gift-title {
+  font-size: 22px;
+  font-weight: bold;
+  color: #c2185b;
+  margin: 8px 0 4px;
 }
 
 @keyframes fall{

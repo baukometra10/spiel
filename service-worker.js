@@ -1,4 +1,4 @@
-const CACHE_NAME = "koko-painter-v5";
+const CACHE_NAME = "koko-painter-v6";
 
 const FILES = [
   "./",
