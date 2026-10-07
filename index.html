@@ -20,119 +20,51 @@
 </head>
 
 
-<body>
-
+<body class="home-page">
 
 <div class="app">
-
 <div class="page">
 
-
 <div class="welcome">
-
 
 <div class="character">
 🎀👧🎨
 </div>
+
 <button id="installButton" type="button" aria-label="تثبيت التطبيق"
 style="display:none">
-
 📱 ثبتي تطبيق مرسم كوكو
-
 </button>
 
-<h1>
-مرسم كوكو
-</h1>
-
-
-<p>
-عالم صغير للرسم والإبداع ✨
-</p>
-
-
+<h1>مرسم كوكو</h1>
+<p>بستان من الورود والألعاب اللذيذة للإبداع 🌹🧸✨</p>
 
 <div id="installWarning" class="warning" style="display:none;"></div>
 <div id="installStatus" class="status" style="display:none;"></div>
 
 <div class="card">
-
-
-<h2>
-ما اسم الفنانة الصغيرة؟ 🌸
-</h2>
-
+<h2>ما اسم الفنانة الصغيرة؟ 🌸</h2>
 <label for="childName" class="input-label">اسم الفنانة الصغيرة</label>
-
-<input 
- id="childName"
- type="text"
- placeholder="اكتبي اسمك هنا">
-
-
-<button onclick="saveName()">
-
-ابدئي المغامرة 🎨
-
-</button>
-
+<input id="childName" type="text" placeholder="اكتبي اسمك هنا">
+<button onclick="saveName()">ادخلي بستان الورود 🌹</button>
 </div>
-
-
 
 <div class="menu">
-
-
-<a href="studio.html">
-
-🎨 الرسم
-
-</a>
-
-
-
-<a href="gallery.html">
-
-🖼️ لوحاتي
-
-</a>
-
-
-
-<a href="reward.html">
-
-🏆 جوائزي
-
-</a>
-
-<a href="parent.html">
-
-🔒 للوالدين
-
-</a>
-
-
-
-<a href="settings.html">
-
-⚙️ الإعدادات
-
-</a>
-
-
+<a href="studio.html">🎨 الرسم</a>
+<a href="gallery.html">🖼️ لوحاتي</a>
+<a href="reward.html">🏆 جوائزي</a>
+<a href="parent.html">🔒 للوالدين</a>
+<a href="settings.html">⚙️ الإعدادات</a>
 </div>
 
-
 </div>
-
-
 </div>
-
-
+</div>
 
   <script src="storage.js"></script>
   <script src="js/install.js"></script>
   <script src="js/origin-warning.js"></script>
+  <script src="js/welcome-magic.js"></script>
 
   <script>
   function saveName() {
@@ -140,6 +72,8 @@ style="display:none">
     setChildName(name);
     location.href = "studio.html";
   }
+
+  document.getElementById("childName").value = getChildName() === "لولو" ? "" : getChildName();
   </script>
 
 </body>

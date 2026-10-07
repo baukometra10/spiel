@@ -48,6 +48,177 @@ body::before{
 
 }
 
+body.home-page {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 182, 193, 0.55), transparent 40%),
+    radial-gradient(circle at 80% 10%, rgba(255, 215, 230, 0.7), transparent 35%),
+    radial-gradient(circle at 50% 90%, rgba(255, 240, 200, 0.55), transparent 40%),
+    linear-gradient(135deg, #ffe5f1, #e8f7ff, #fff5d7);
+}
+
+body.splash-open {
+  overflow: hidden;
+}
+
+.magic-rain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+}
+
+.magic-petal {
+  position: absolute;
+  top: -10vh;
+  animation: petal-fall linear forwards;
+  filter: drop-shadow(0 4px 6px rgba(255, 105, 180, 0.25));
+  user-select: none;
+}
+
+.magic-petal--burst {
+  z-index: 60;
+}
+
+@keyframes petal-fall {
+  0% {
+    transform: translate3d(0, -10vh, 0) rotate(0deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--drift, 20px), 110vh, 0) rotate(var(--spin, 720deg));
+    opacity: 0.15;
+  }
+}
+
+.welcome-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 120, 170, 0.55), transparent 45%),
+    radial-gradient(circle at 70% 70%, rgba(255, 200, 120, 0.45), transparent 40%),
+    linear-gradient(160deg, #ff9ec8, #ffd6ea, #fff0c8);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+
+.welcome-splash--out {
+  opacity: 0;
+  transform: scale(1.05);
+  pointer-events: none;
+}
+
+.welcome-splash-inner {
+  text-align: center;
+  padding: 28px 24px;
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 32px;
+  box-shadow: 0 20px 50px rgba(255, 80, 150, 0.35);
+  max-width: 92vw;
+  animation: pop-in 0.55s ease;
+}
+
+.splash-roses,
+.splash-toys {
+  font-size: clamp(28px, 8vw, 48px);
+  letter-spacing: 6px;
+  animation: clap 0.8s ease infinite alternate;
+}
+
+.splash-toys {
+  animation-delay: 0.2s;
+  margin-top: 6px;
+}
+
+.splash-title {
+  font-size: clamp(26px, 6vw, 36px);
+  color: #c2185b;
+  font-weight: bold;
+  margin: 16px 0 8px;
+}
+
+.splash-sub {
+  font-size: clamp(16px, 4vw, 20px);
+  color: #8b2860;
+  margin: 0 0 18px;
+}
+
+.splash-enter {
+  border: none;
+  border-radius: 999px;
+  padding: 14px 28px;
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+  background: linear-gradient(135deg, #ff5fa2, #ff9ef5);
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(255, 95, 162, 0.4);
+}
+
+.splash-enter:active {
+  transform: scale(0.97);
+}
+
+.welcome-garland {
+  font-size: 22px;
+  letter-spacing: 4px;
+  margin-bottom: 8px;
+  animation: floating 3.5s ease-in-out infinite alternate;
+  opacity: 0.95;
+}
+
+.welcome-garland--right {
+  animation-delay: 0.6s;
+}
+
+.character .char-halo,
+.character .char-toys {
+  display: block;
+  font-size: 0.45em;
+  letter-spacing: 4px;
+}
+
+.character .char-main {
+  display: block;
+  line-height: 1.1;
+}
+
+.welcome {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 248, 252, 0.98));
+  border: 3px solid rgba(255, 158, 200, 0.55);
+}
+
+.welcome::before,
+.welcome::after {
+  content: "🌹 🧸 🌸 🍭 🌺 🦄 🌷 🎈";
+  position: absolute;
+  font-size: 18px;
+  opacity: 0.35;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.welcome::before {
+  top: 10px;
+  right: -10px;
+  animation: floating 4s ease-in-out infinite alternate;
+}
+
+.welcome::after {
+  bottom: 12px;
+  left: -6px;
+  animation: floating 5s ease-in-out infinite alternate-reverse;
+}
+
 
 
 @keyframes floating{
@@ -87,8 +258,6 @@ translateY(30px);
 
 
 .welcome{
-
-    background:white;
 
     border-radius:40px;
 

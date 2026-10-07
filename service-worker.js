@@ -1,4 +1,4 @@
-const CACHE_NAME = "koko-painter-v2";
+const CACHE_NAME = "koko-painter-v3";
 
 const FILES = [
   "./",
@@ -14,6 +14,8 @@ const FILES = [
   "./js/install.js",
   "./js/gallery.js",
   "./js/origin-warning.js",
+  "./js/welcome-magic.js",
+
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
