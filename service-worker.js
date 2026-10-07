@@ -1,4 +1,4 @@
-const CACHE_NAME = "koko-painter-v3";
+const CACHE_NAME = "koko-painter-v4";
 
 const FILES = [
   "./",
@@ -15,7 +15,6 @@ const FILES = [
   "./js/gallery.js",
   "./js/origin-warning.js",
   "./js/welcome-magic.js",
-
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -52,15 +51,43 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  const request = event.request;
+  if (request.method !== "GET") {
+    return;
+  }
+
+  const isNavigate = request.mode === "navigate";
+  const isHtmlJsCss =
+    isNavigate ||
+    /\.(?:html|js|css)(?:\?|$)/i.test(new URL(request.url).pathname);
+
+  if (isHtmlJsCss) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          return response;
+        })
+        .catch(() =>
+          caches.match(request).then((cached) => {
+            if (cached) return cached;
+            if (isNavigate) return caches.match("./index.html");
+            return undefined;
+          })
+        )
+    );
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then((response) => {
+    caches.match(request).then((cached) => {
       return (
-        response ||
-        fetch(event.request).catch(() => {
-          if (event.request.mode === "navigate") {
-            return caches.match("./index.html");
-          }
-          return undefined;
+        cached ||
+        fetch(request).then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          return response;
         })
       );
     })
