@@ -42,7 +42,9 @@
 </div>
 
 <script src="storage.js"></script>
+<script src="js/koko-songs.js"></script>
 <script src="js/origin-warning.js"></script>
+<script src="js/pwa-update.js"></script>
 <script>
 const stars = getStars();
 unlockStickersForStars(stars);
@@ -79,6 +81,20 @@ gallery.innerHTML = Object.keys(RARE_STICKERS)
 
 if (unlocked.length) {
   document.querySelector(".page").classList.add("has-unlocks");
+}
+
+const lastPlayedLevel = sessionStorage.getItem("kokoRewardSongLevel");
+if (lastPlayedLevel !== info.title) {
+  sessionStorage.setItem("kokoRewardSongLevel", info.title);
+  document.body.addEventListener(
+    "click",
+    () => {
+      if (typeof playRewardSong === "function") {
+        playRewardSong(info.nextAt == null ? "level" : "stars");
+      }
+    },
+    { once: true }
+  );
 }
 </script>
 

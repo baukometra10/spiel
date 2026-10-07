@@ -1,4 +1,5 @@
-const CACHE_NAME = "koko-painter-v6";
+const CACHE_NAME = "koko-painter-v7";
+const APP_VERSION = "7";
 
 const FILES = [
   "./",
@@ -16,6 +17,8 @@ const FILES = [
   "./js/origin-warning.js",
   "./js/welcome-magic.js",
   "./js/koko-voice.js",
+  "./js/koko-songs.js",
+  "./js/pwa-update.js",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -42,6 +45,12 @@ self.addEventListener("install", (event) => {
     caches.open(CACHE_NAME).then((cache) => cache.addAll(FILES))
   );
   self.skipWaiting();
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("activate", (event) => {

@@ -822,12 +822,15 @@ function showUnlockOverlay(ids) {
       return `<div class="unlock-item"><span class="unlock-emoji">${meta.emoji}</span><span>${meta.label}</span></div>`;
     })
     .join("");
-  overlay.hidden = false;
+  overlay.removeAttribute("hidden");
   overlay.classList.add("is-visible");
   playSound("unlock");
+  if (typeof playRewardSong === "function") {
+    playRewardSong("unlock");
+  }
   setTimeout(() => {
     overlay.classList.remove("is-visible");
-    overlay.hidden = true;
+    overlay.setAttribute("hidden", "");
   }, 3200);
   renderRareStickers();
 }
@@ -934,6 +937,9 @@ function showDailyGiftOverlay(gift) {
   burstConfetti(55);
   playSound("unlock");
   playFanfare();
+  if (typeof playRewardSong === "function") {
+    playRewardSong("daily");
+  }
   applyDailyGiftEvent(gift);
 
   if (typeof kokoPraise === "function") {
@@ -990,6 +996,8 @@ function saveDrawing() {
     image = canvas.toDataURL("image/png");
   }
 
+  const starsBefore = getStars();
+  const levelBefore = getLevelInfo(starsBefore).title;
   const result = addDrawing(image);
   if (!result.ok) {
     showStudioStatus("مساحة التخزين ممتلئة. احذفي بعض اللوحات من المعرض.");
@@ -1000,6 +1008,17 @@ function saveDrawing() {
   celebrateSave(getChildName());
   showStudioStatus("تم حفظ اللوحة 🌟");
   playSound("save");
+
+  const levelAfter = getLevelInfo(result.stars).title;
+  const leveledUp = levelBefore !== levelAfter;
+  if (leveledUp && typeof playRewardSong === "function") {
+    setTimeout(() => playRewardSong("level"), 400);
+    showStudioStatus(`مستوى جديد: ${levelAfter} 👑`);
+  } else if (result.newlyUnlocked && result.newlyUnlocked.length) {
+    // song plays inside showUnlockOverlay
+  } else if (typeof playRewardSong === "function") {
+    playRewardSong("save");
+  }
 
   if (result.newlyUnlocked && result.newlyUnlocked.length) {
     setTimeout(() => showUnlockOverlay(result.newlyUnlocked), 900);

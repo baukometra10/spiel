@@ -78,9 +78,14 @@ function registerServiceWorker() {
   if (!('serviceWorker' in navigator) || location.protocol === 'file:') {
     return;
   }
-  navigator.serviceWorker.register('service-worker.js').catch((error) => {
-    console.error('Service Worker registration failed:', error);
-  });
+  navigator.serviceWorker
+    .register('service-worker.js', { updateViaCache: 'none' })
+    .then((registration) => {
+      registration.update().catch(() => {});
+    })
+    .catch((error) => {
+      console.error('Service Worker registration failed:', error);
+    });
 }
 
 window.addEventListener('DOMContentLoaded', () => {
