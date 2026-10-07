@@ -2,7 +2,6 @@
 <html lang="ar" dir="rtl">
 
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>🔒 للوالدين</title>
@@ -12,26 +11,57 @@
 <body>
 
 <div class="app">
-<div class="page">
+<div class="page parent-locked" id="parentPage">
 
 <h1 class="page-title">🔒 للوالدين</h1>
 
-<p>هذا المكان مخصص للوالدين لمتابعة تقدم الفنانة الصغيرة وإدارة بيانات التطبيق.</p>
-
-<div class="reward">
-  اسم الفنانة: <strong id="childName"></strong>
+<div id="pinGate" class="pin-panel">
+  <div id="pinSetup">
+    <p>أنشئ رمز PIN من 4 أرقام لحماية منطقة الوالدين.</p>
+    <label for="newPin" class="input-label">رمز PIN جديد</label>
+    <input id="newPin" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]*" autocomplete="new-password">
+    <br><br>
+    <label for="confirmPin" class="input-label">تأكيد الرمز</label>
+    <input id="confirmPin" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]*" autocomplete="new-password">
+    <br><br>
+    <button type="button" class="button-small" onclick="setupPin()">حفظ الرمز</button>
+  </div>
+  <div id="pinLogin" style="display:none;">
+    <p>أدخلي رمز PIN للدخول إلى منطقة الوالدين.</p>
+    <label for="loginPin" class="input-label">رمز PIN</label>
+    <input id="loginPin" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]*" autocomplete="current-password">
+    <br><br>
+    <button type="button" class="button-small" onclick="unlockParent()">دخول</button>
+  </div>
+  <div id="pinStatus" class="status" style="display:none;margin-top:12px;"></div>
 </div>
 
-<div class="reward">
-  عدد النجوم: <strong id="starCount"></strong>
+<div id="parentContent">
+  <p>هذا المكان مخصص للوالدين لمتابعة تقدم الفنانة الصغيرة وإدارة بيانات التطبيق.</p>
+
+  <div class="reward">
+    اسم الفنانة: <strong id="childName"></strong>
+  </div>
+
+  <div class="reward">
+    عدد النجوم: <strong id="starCount"></strong>
+  </div>
+
+  <div class="reward">
+    عدد اللوحات المحفوظة: <strong id="drawingCount"></strong>
+  </div>
+
+  <button class="button-small" type="button" onclick="clearApplicationData()">حذف كل بيانات التطبيق 🗑️</button>
+  <br><br>
+  <button class="button-small" type="button" onclick="changePin()">تغيير رمز PIN</button>
+
+  <p class="privacy-note">
+    🔐 الخصوصية: جميع الرسومات والنجوم والاسم تُحفظ فقط على هذا الجهاز.
+    لا يوجد حساب سحابي ولا إرسال بيانات إلى خوادم خارجية.
+  </p>
 </div>
 
-<div class="reward">
-  عدد اللوحات المحفوظة: <strong id="drawingCount"></strong>
-</div>
-
-<button class="button-small" onclick="clearApplicationData()">حذف كل بيانات التطبيق 🗑️</button>
-<br><br>
+<br>
 <a class="button-small" href="index.html">🏠 الرئيسية</a>
 
 </div>
@@ -40,18 +70,98 @@
 <script src="storage.js"></script>
 <script src="js/origin-warning.js"></script>
 <script>
+const page = document.getElementById("parentPage");
+const pinSetup = document.getElementById("pinSetup");
+const pinLogin = document.getElementById("pinLogin");
+let sessionUnlocked = false;
+
+function showPinStatus(message) {
+  const el = document.getElementById("pinStatus");
+  el.textContent = message;
+  el.style.display = "block";
+  setTimeout(() => {
+    el.style.display = "none";
+  }, 3000);
+}
+
+function refreshStats() {
   document.getElementById("childName").innerText = getChildName();
   document.getElementById("starCount").innerText = getStars();
   document.getElementById("drawingCount").innerText = getDrawings().length;
+}
 
-  function clearApplicationData() {
-    if (confirm("هل تريدين حذف كل بيانات التطبيق؟")) {
-      clearAllData();
-      location.reload();
-    }
+function showGate() {
+  page.classList.remove("parent-unlocked");
+  page.classList.add("parent-locked");
+  if (hasParentPin()) {
+    pinSetup.style.display = "none";
+    pinLogin.style.display = "block";
+  } else {
+    pinSetup.style.display = "block";
+    pinLogin.style.display = "none";
   }
+}
+
+function unlockUI() {
+  sessionUnlocked = true;
+  page.classList.remove("parent-locked");
+  page.classList.add("parent-unlocked");
+  refreshStats();
+}
+
+async function setupPin() {
+  const a = document.getElementById("newPin").value.trim();
+  const b = document.getElementById("confirmPin").value.trim();
+  if (!/^\d{4}$/.test(a)) {
+    showPinStatus("الرمز يجب أن يكون 4 أرقام.");
+    return;
+  }
+  if (a !== b) {
+    showPinStatus("الرمزان غير متطابقين.");
+    return;
+  }
+  const ok = await setParentPin(a);
+  if (!ok) {
+    showPinStatus("تعذر حفظ الرمز.");
+    return;
+  }
+  showPinStatus("تم حفظ رمز PIN بنجاح.");
+  unlockUI();
+}
+
+async function unlockParent() {
+  const pin = document.getElementById("loginPin").value.trim();
+  if (!(await verifyParentPin(pin))) {
+    showPinStatus("رمز PIN غير صحيح.");
+    return;
+  }
+  unlockUI();
+}
+
+async function changePin() {
+  const next = prompt("أدخلي رمز PIN الجديد (4 أرقام):");
+  if (next == null) return;
+  if (!/^\d{4}$/.test(next.trim())) {
+    alert("الرمز يجب أن يكون 4 أرقام.");
+    return;
+  }
+  await setParentPin(next.trim());
+  alert("تم تحديث رمز PIN.");
+}
+
+function clearApplicationData() {
+  if (!sessionUnlocked) {
+    alert("يجب فتح القفل أولاً.");
+    return;
+  }
+  if (confirm("هل تريدين حذف كل بيانات التطبيق؟")) {
+    clearAllData();
+    location.href = "index.html";
+  }
+}
+
+showGate();
 </script>
 
 </body>
-
 </html>

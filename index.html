@@ -7,7 +7,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>🎀 مرسم كؤكؤ</title>
+<title>🎀 مرسم كوكو</title>
 
 <link rel="stylesheet" href="css/style.css">
 
@@ -137,17 +137,8 @@ style="display:none">
   <script>
   function saveName() {
     let name = document.getElementById("childName").value;
-    if (name.trim() == "") {
-      name = "لولو";
-    }
-    localStorage.setItem("childName", name);
+    setChildName(name);
     location.href = "studio.html";
-  }
-
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js").catch((error) => {
-      console.error("Service Worker registration failed:", error);
-    });
   }
   </script>
 

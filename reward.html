@@ -2,96 +2,85 @@
 <html lang="ar" dir="rtl">
 
 <head>
-
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-
 <title>🏆 جوائزي</title>
-
 <link rel="stylesheet" href="css/style.css">
-
 </head>
-
 
 <body>
 
-
 <div class="app">
-
-
 <div class="page">
 
-
-<h1 class="page-title">
-🏆 جوائزي
-</h1>
-
+<h1 class="page-title">🏆 جوائزي</h1>
 
 <div class="reward">
-
-⭐ النجوم:
-<span id="stars"></span>
-
+  ⭐ النجوم: <span id="stars"></span>
 </div>
 
+<div class="reward" id="level"></div>
 
-<div class="reward" id="level">
-
+<div class="reward">
+  <div id="nextGoal"></div>
+  <div class="progress-wrap">
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
 </div>
 
-
-
-<a class="button-small" href="index.html">
-🏠 الرئيسية
-</a>
-
-
+<div class="reward">
+  <h3>ملصقاتي النادرة</h3>
+  <div id="stickerGallery" class="reward-sticker-grid"></div>
 </div>
 
+<a class="button-small" href="studio.html">🎨 غرفة الرسم</a>
+<a class="button-small" href="index.html">🏠 الرئيسية</a>
 
 </div>
-
-
+</div>
 
 <script src="storage.js"></script>
 <script src="js/origin-warning.js"></script>
-
 <script>
+const stars = getStars();
+unlockStickersForStars(stars);
+const info = getLevelInfo(stars);
 
+document.getElementById("stars").textContent = stars;
+document.getElementById("level").textContent = info.title;
 
-let stars =
-getStars();
+const nextGoal = document.getElementById("nextGoal");
+if (info.nextAt == null) {
+  nextGoal.textContent = "لقد وصلتِ إلى أعلى مستوى! 💎";
+} else {
+  nextGoal.textContent = `التالي عند ${info.nextAt} نجمة — باقي ${info.remaining}`;
+}
 
+const fill = document.getElementById("progressFill");
+requestAnimationFrame(() => {
+  fill.style.width = info.progress + "%";
+});
 
-document.getElementById("stars")
-.innerHTML=stars;
+const unlocked = getUnlockedStickers();
+const gallery = document.getElementById("stickerGallery");
+gallery.innerHTML = Object.keys(RARE_STICKERS)
+  .map((id) => {
+    const meta = RARE_STICKERS[id];
+    const open = unlocked.includes(id);
+    return `<div class="reward-sticker ${open ? "" : "locked"}">
+      <span class="emoji">${open ? meta.emoji : "🔒"}</span>
+      <span>${meta.label}</span>
+      <small>${open ? "مفتوح" : "عند " + meta.unlockAt + " ⭐"}</small>
+    </div>`;
+  })
+  .join("");
 
-
-
-let level="🌱 مبتدئة";
-
-
-if(stars>=5)
-level="🌸 فنانة صغيرة";
-
-
-if(stars>=15)
-level="👑 أميرة الرسم";
-
-
-if(stars>=30)
-level="💎 نجمة الفن";
-
-
-document.getElementById("level")
-.innerHTML=level;
-
-
-
+if (unlocked.length) {
+  document.querySelector(".page").classList.add("has-unlocks");
+}
 </script>
 
-
 </body>
-
 </html>

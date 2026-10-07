@@ -77,32 +77,29 @@
 <script src="js/origin-warning.js"></script>
 
 <script>
+document.getElementById("newName").value = getChildName();
 
-
-document.getElementById("newName").value=
-getChildName();
-
-
-
-function changeName(){
-    setChildName(document.getElementById("newName").value);
-    showSettingsStatus("تم تغيير الاسم 🌸");
+function showSettingsStatus(message) {
+  const status = document.getElementById("settingsStatus");
+  if (!status) return;
+  status.textContent = message;
+  status.style.display = "block";
+  setTimeout(() => {
+    status.style.display = "none";
+  }, 3000);
 }
 
-
-
-
-function resetAll(){
-    if(confirm("هل تريدين حذف كل اللوحات؟")){
-        clearDrawings();
-        showSettingsStatus("تم حذف جميع اللوحات.");
-    }
-
-
-
+function changeName() {
+  setChildName(document.getElementById("newName").value);
+  showSettingsStatus("تم تغيير الاسم 🌸");
 }
 
-
+function resetAll() {
+  if (confirm("هل تريدين حذف كل اللوحات؟")) {
+    clearDrawings();
+    showSettingsStatus("تم حذف جميع اللوحات.");
+  }
+}
 </script>
 
 

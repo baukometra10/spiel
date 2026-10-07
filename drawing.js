@@ -1,10 +1,39 @@
 const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+const ctx = canvas.getContext("2d", { willReadFrequently: true });
 const upload = document.getElementById("upload");
 
 let audioContext;
 let audioReady = false;
 let soundEnabled = localStorage.getItem("soundEnabled") !== "0";
+
+const HISTORY_MAX = 20;
+let historyStack = [];
+let historyIndex = -1;
+
+const tool = {
+  color: "#ff69b4",
+  size: 8,
+  rainbow: false,
+  eraser: false,
+  magic: false,
+  glitter: false,
+  fill: false,
+};
+
+let drawing = false;
+let strokeActive = false;
+let lastX = 0;
+let lastY = 0;
+let currentBackground = "white";
+let currentTemplate = null;
+
+const PRAISE = [
+  (name) => `واو يا ${name}! لوحة رائعة 🌟`,
+  (name) => `أحسنتِ يا ${name}! أنتِ فنانة 🎨`,
+  (name) => `يا سلام يا ${name}! كوكو فخور بكِ 💖`,
+  (name) => `إبداع مذهل يا ${name}! ✨`,
+  (name) => `تحفة فنية يا ${name}! 👑`,
+];
 
 function initAudio() {
   if (audioReady) return;
@@ -18,8 +47,9 @@ function initAudio() {
 }
 
 document.addEventListener("click", initAudio, { once: true });
+document.addEventListener("touchstart", initAudio, { once: true });
 
-function playTone(frequency, duration = 0.12, type = "sine") {
+function playTone(frequency, duration = 0.12, type = "sine", volume = 0.18) {
   if (!window.AudioContext && !window.webkitAudioContext) return;
   initAudio();
   if (!audioContext) return;
@@ -30,10 +60,18 @@ function playTone(frequency, duration = 0.12, type = "sine") {
   oscillator.connect(gain);
   gain.connect(audioContext.destination);
   gain.gain.setValueAtTime(0.001, audioContext.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.18, audioContext.currentTime + 0.01);
+  gain.gain.exponentialRampToValueAtTime(volume, audioContext.currentTime + 0.01);
   oscillator.start(audioContext.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
   oscillator.stop(audioContext.currentTime + duration + 0.02);
+}
+
+function playFanfare() {
+  if (!soundEnabled) return;
+  const notes = [523, 659, 784, 1046];
+  notes.forEach((freq, i) => {
+    setTimeout(() => playTone(freq, 0.18, "triangle", 0.2), i * 90);
+  });
 }
 
 function updateSoundButtonLabel() {
@@ -57,7 +95,7 @@ function playSound(name) {
       playTone(700, 0.08, "triangle");
       break;
     case "save":
-      playTone(880, 0.14, "sine");
+      playFanfare();
       break;
     case "clear":
       playTone(420, 0.12, "square");
@@ -74,31 +112,82 @@ function playSound(name) {
     case "magic":
       playTone(960, 0.08, "sine");
       break;
+    case "fill":
+      playTone(640, 0.1, "sine");
+      playTone(820, 0.12, "triangle");
+      break;
+    case "undo":
+      playTone(480, 0.08, "triangle");
+      break;
+    case "redo":
+      playTone(720, 0.08, "triangle");
+      break;
+    case "unlock":
+      playTone(880, 0.1, "sine");
+      setTimeout(() => playTone(1175, 0.16, "triangle", 0.22), 100);
+      break;
     default:
       playTone(620, 0.08, "sine");
       break;
   }
 }
 
-const tool = {
-  color: "#ff69b4",
-  size: 8,
-  rainbow: false,
-  eraser: false,
-  magic: false,
-};
+function resetToolFlags(except) {
+  tool.rainbow = except === "rainbow";
+  tool.eraser = except === "eraser";
+  tool.magic = except === "magic";
+  tool.glitter = except === "glitter";
+  tool.fill = except === "fill";
+}
 
-let drawing = false;
-let lastX = 0;
-let lastY = 0;
-let currentBackground = "white";
-let currentTemplate = null;
+function updateUndoRedoButtons() {
+  const undoBtn = document.getElementById("undoBtn");
+  const redoBtn = document.getElementById("redoBtn");
+  if (undoBtn) undoBtn.disabled = historyIndex <= 0;
+  if (redoBtn) redoBtn.disabled = historyIndex >= historyStack.length - 1;
+}
+
+function pushHistory() {
+  try {
+    const snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    historyStack = historyStack.slice(0, historyIndex + 1);
+    historyStack.push(snapshot);
+    if (historyStack.length > HISTORY_MAX) {
+      historyStack.shift();
+    }
+    historyIndex = historyStack.length - 1;
+    updateUndoRedoButtons();
+  } catch (error) {
+    console.warn("Could not save history snapshot", error);
+  }
+}
+
+function undo() {
+  if (historyIndex <= 0) return;
+  historyIndex -= 1;
+  ctx.putImageData(historyStack[historyIndex], 0, 0);
+  updateUndoRedoButtons();
+  playSound("undo");
+  showStudioStatus("تم التراجع ↩️");
+}
+
+function redo() {
+  if (historyIndex >= historyStack.length - 1) return;
+  historyIndex += 1;
+  ctx.putImageData(historyStack[historyIndex], 0, 0);
+  updateUndoRedoButtons();
+  playSound("redo");
+  showStudioStatus("تم الإعادة ↪️");
+}
 
 function resizeCanvas() {
   const width = Math.min(window.innerWidth - 40, 760);
   canvas.width = width;
   canvas.height = 500;
   drawBackground();
+  historyStack = [];
+  historyIndex = -1;
+  pushHistory();
 }
 
 function drawBackground() {
@@ -132,7 +221,7 @@ function drawStar(cx, cy, spikes, outerRadius, innerRadius, color) {
   const rot = (Math.PI / 2) * 3;
   let x = cx;
   let y = cy;
-  let step = Math.PI / spikes;
+  const step = Math.PI / spikes;
   ctx.beginPath();
   ctx.moveTo(cx, cy - outerRadius);
   for (let i = 0; i < spikes; i++) {
@@ -152,30 +241,134 @@ function snapshotCanvas() {
   return canvas.toDataURL("image/png");
 }
 
-function redrawCanvas() {
-  const snapshot = snapshotCanvas();
-  drawBackground();
-  const image = new Image();
-  image.onload = () => {
-    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-  };
-  image.src = snapshot;
-}
-
 function getPointer(event) {
   const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
   if (event.touches && event.touches[0]) {
-    return [event.touches[0].clientX - rect.left, event.touches[0].clientY - rect.top];
+    return [
+      (event.touches[0].clientX - rect.left) * scaleX,
+      (event.touches[0].clientY - rect.top) * scaleY,
+    ];
   }
-  return [event.clientX - rect.left, event.clientY - rect.top];
+  return [(event.clientX - rect.left) * scaleX, (event.clientY - rect.top) * scaleY];
+}
+
+function hexToRgba(hex) {
+  let value = hex.replace("#", "");
+  if (value.length === 3) {
+    value = value
+      .split("")
+      .map((c) => c + c)
+      .join("");
+  }
+  const num = parseInt(value, 16);
+  return {
+    r: (num >> 16) & 255,
+    g: (num >> 8) & 255,
+    b: num & 255,
+    a: 255,
+  };
+}
+
+function colorsMatch(data, index, r, g, b, a, tolerance) {
+  return (
+    Math.abs(data[index] - r) +
+      Math.abs(data[index + 1] - g) +
+      Math.abs(data[index + 2] - b) +
+      Math.abs(data[index + 3] - a) <=
+    tolerance
+  );
+}
+
+function floodFill(startX, startY, fillHex) {
+  const x0 = Math.floor(startX);
+  const y0 = Math.floor(startY);
+  if (x0 < 0 || y0 < 0 || x0 >= canvas.width || y0 >= canvas.height) return;
+
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  const width = canvas.width;
+  const height = canvas.height;
+  const startIndex = (y0 * width + x0) * 4;
+  const sr = data[startIndex];
+  const sg = data[startIndex + 1];
+  const sb = data[startIndex + 2];
+  const sa = data[startIndex + 3];
+  const fill = hexToRgba(fillHex);
+  const tolerance = 40;
+
+  if (colorsMatch(data, startIndex, fill.r, fill.g, fill.b, fill.a, 8)) {
+    return;
+  }
+
+  const stack = [[x0, y0]];
+  const visited = new Uint8Array(width * height);
+  let filled = 0;
+  const maxPixels = width * height;
+
+  while (stack.length && filled < maxPixels) {
+    const [x, y] = stack.pop();
+    if (x < 0 || y < 0 || x >= width || y >= height) continue;
+    const pos = y * width + x;
+    if (visited[pos]) continue;
+    const i = pos * 4;
+    if (!colorsMatch(data, i, sr, sg, sb, sa, tolerance)) continue;
+
+    visited[pos] = 1;
+    data[i] = fill.r;
+    data[i + 1] = fill.g;
+    data[i + 2] = fill.b;
+    data[i + 3] = fill.a;
+    filled += 1;
+
+    stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+  }
+
+  ctx.putImageData(imageData, 0, 0);
 }
 
 function startDrawing(event) {
+  const [x, y] = getPointer(event);
+
+  if (tool.fill) {
+    const fillColor = tool.rainbow
+      ? `hsl(${Math.floor(Math.random() * 360)}, 100%, 65%)`
+      : tool.color;
+    // Convert HSL fill to hex approx via canvas
+    let hex = tool.color;
+    if (tool.rainbow) {
+      const tmp = document.createElement("canvas").getContext("2d");
+      tmp.fillStyle = fillColor;
+      hex = tmp.fillStyle;
+      if (hex.startsWith("rgb")) {
+        const parts = hex.match(/\d+/g).map(Number);
+        hex =
+          "#" +
+          parts
+            .slice(0, 3)
+            .map((n) => n.toString(16).padStart(2, "0"))
+            .join("");
+      }
+    }
+    floodFill(x, y, hex);
+    pushHistory();
+    playSound("fill");
+    showStudioStatus("تم التلوين 🪣✨");
+    return;
+  }
+
   drawing = true;
-  [lastX, lastY] = getPointer(event);
+  strokeActive = true;
+  lastX = x;
+  lastY = y;
 }
 
 function stopDrawing() {
+  if (strokeActive) {
+    pushHistory();
+    strokeActive = false;
+  }
   drawing = false;
 }
 
@@ -192,11 +385,15 @@ function draw(event) {
     ctx.strokeStyle = "rgba(0,0,0,1)";
   } else {
     ctx.globalCompositeOperation = "source-over";
-    ctx.strokeStyle = tool.rainbow ? `hsl(${Math.floor(Math.random() * 360)}, 100%, 65%)` : tool.color;
+    ctx.strokeStyle = tool.rainbow
+      ? `hsl(${Math.floor(Math.random() * 360)}, 100%, 65%)`
+      : tool.color;
   }
 
   if (tool.magic) {
     drawMagic(x, y);
+  } else if (tool.glitter) {
+    drawGlitter(x, y);
   } else {
     ctx.beginPath();
     ctx.moveTo(lastX, lastY);
@@ -204,7 +401,8 @@ function draw(event) {
     ctx.stroke();
   }
 
-  [lastX, lastY] = [x, y];
+  lastX = x;
+  lastY = y;
 }
 
 function drawMagic(x, y) {
@@ -213,44 +411,80 @@ function drawMagic(x, y) {
     const offsetX = (Math.random() - 0.5) * tool.size * 3;
     const offsetY = (Math.random() - 0.5) * tool.size * 3;
     const size = Math.max(1, tool.size / 3 + Math.random() * 3);
-    ctx.fillStyle = tool.rainbow ? `hsl(${Math.floor(Math.random() * 360)}, 100%, 70%)` : tool.color;
+    ctx.fillStyle = tool.rainbow
+      ? `hsl(${Math.floor(Math.random() * 360)}, 100%, 70%)`
+      : tool.color;
     ctx.beginPath();
     ctx.arc(x + offsetX, y + offsetY, size, 0, Math.PI * 2);
     ctx.fill();
   }
 }
 
+function drawGlitter(x, y) {
+  ctx.beginPath();
+  ctx.moveTo(lastX, lastY);
+  ctx.lineTo(x, y);
+  ctx.strokeStyle = tool.color;
+  ctx.globalAlpha = 0.85;
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  const sparks = Math.max(4, Math.round(tool.size));
+  for (let i = 0; i < sparks; i++) {
+    const ox = (Math.random() - 0.5) * tool.size * 4;
+    const oy = (Math.random() - 0.5) * tool.size * 4;
+    const size = 1 + Math.random() * 3;
+    ctx.fillStyle = `hsl(${Math.floor(Math.random() * 360)}, 100%, ${70 + Math.random() * 20}%)`;
+    drawStar(x + ox, y + oy, 4, size + 2, size, ctx.fillStyle);
+  }
+}
+
 function pencil() {
+  resetToolFlags();
   tool.color = "#ff69b4";
   tool.size = 8;
-  tool.rainbow = false;
-  tool.eraser = false;
-  tool.magic = false;
   playSound("select");
+  showStudioStatus("قلم جاهز ✏️");
 }
 
 function rainbow() {
+  resetToolFlags("rainbow");
   tool.rainbow = true;
-  tool.eraser = false;
-  tool.magic = false;
   tool.size = 12;
   playSound("select");
+  showStudioStatus("ألوان قوس قزح 🌈");
 }
 
 function eraser() {
+  resetToolFlags("eraser");
   tool.eraser = true;
-  tool.rainbow = false;
-  tool.magic = false;
   tool.size = 20;
   playSound("select");
+  showStudioStatus("ممحاة جاهزة 🧼");
 }
 
 function magicBrush() {
+  resetToolFlags("magic");
   tool.magic = true;
-  tool.eraser = false;
   tool.rainbow = true;
   tool.size = 14;
   playSound("magic");
+  showStudioStatus("فرشاة السحر ✨");
+}
+
+function glitterBrush() {
+  resetToolFlags("glitter");
+  tool.glitter = true;
+  tool.size = 10;
+  playSound("magic");
+  showStudioStatus("فرشاة البريق 💫");
+}
+
+function fillBucket() {
+  resetToolFlags("fill");
+  tool.fill = true;
+  playSound("select");
+  showStudioStatus("أداة التعبئة 🪣 انقري داخل الرسم");
 }
 
 function setColor(color) {
@@ -258,44 +492,73 @@ function setColor(color) {
   tool.rainbow = false;
   tool.eraser = false;
   tool.magic = false;
+  tool.glitter = false;
   playSound("select");
+}
+
+function setPalette(palette) {
+  const pastel = ["#ffb3d9", "#c9b6ff", "#a8e6cf", "#ffe0a3", "#b5e8ff", "#ffd6e7"];
+  const neon = ["#ff2d95", "#00e5ff", "#39ff14", "#fff000", "#ff6b00", "#bf00ff"];
+  const colors = palette === "neon" ? neon : pastel;
+  const container = document.getElementById("colorButtons");
+  if (!container) {
+    setColor(colors[0]);
+    return;
+  }
+  container.innerHTML = colors
+    .map(
+      (c) =>
+        `<button type="button" class="color-button" style="background:${c};" onclick="setColor('${c}')" aria-label="لون"></button>`
+    )
+    .join("");
+  setColor(colors[0]);
+  showStudioStatus(palette === "neon" ? "لوحة نيون ⚡" : "لوحة باستيل 🌸");
 }
 
 function setSize(size) {
   tool.size = size;
   tool.eraser = false;
   tool.magic = false;
+  tool.glitter = false;
+  tool.fill = false;
   playSound("select");
 }
 
 function addSticker(type) {
+  const unlocked = getUnlockedStickers();
+  if (RARE_STICKERS[type] && !unlocked.includes(type)) {
+    showStudioStatus("هذا الملصق مقفل 🔒 اجمعي نجوماً أكثر!");
+    playSound("error");
+    return;
+  }
   const width = canvas.width * 0.32;
   const height = canvas.height * 0.32;
   const x = (canvas.width - width) / 2;
   const y = (canvas.height - height) / 2;
   drawSticker(type, x, y, width, height);
+  pushHistory();
   playSound("sticker");
 }
 
 function drawSticker(type, x, y, width, height) {
   ctx.save();
   ctx.lineWidth = 5;
-  ctx.lineCap = 'round';
+  ctx.lineCap = "round";
+  ctx.globalCompositeOperation = "source-over";
 
-  if (type === 'butterfly') {
-    const wingColor = '#ff9ef5';
-    const bodyColor = '#8b2860';
+  if (type === "butterfly") {
+    const wingColor = "#ff9ef5";
+    const bodyColor = "#8b2860";
     ctx.fillStyle = wingColor;
-    ctx.strokeStyle = bodyColor;
     ctx.beginPath();
     ctx.ellipse(x + width * 0.3, y + height * 0.5, width * 0.22, height * 0.28, -0.5, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
     ctx.ellipse(x + width * 0.7, y + height * 0.5, width * 0.22, height * 0.28, 0.5, 0, Math.PI * 2);
     ctx.fill();
-    ctx.beginPath();
     ctx.strokeStyle = bodyColor;
     ctx.lineWidth = 8;
+    ctx.beginPath();
     ctx.moveTo(x + width * 0.5, y + height * 0.2);
     ctx.lineTo(x + width * 0.5, y + height * 0.8);
     ctx.stroke();
@@ -303,18 +566,18 @@ function drawSticker(type, x, y, width, height) {
     return;
   }
 
-  if (type === 'castle') {
-    ctx.fillStyle = '#8cb4ff';
-    ctx.strokeStyle = '#4d7dec';
+  if (type === "castle") {
+    ctx.fillStyle = "#8cb4ff";
+    ctx.strokeStyle = "#4d7dec";
     ctx.fillRect(x + width * 0.15, y + height * 0.35, width * 0.7, height * 0.45);
     ctx.fillRect(x + width * 0.08, y + height * 0.15, width * 0.18, height * 0.25);
     ctx.fillRect(x + width * 0.72, y + height * 0.15, width * 0.18, height * 0.25);
     ctx.fillRect(x + width * 0.35, y + height * 0.15, width * 0.3, height * 0.22);
     ctx.strokeRect(x + width * 0.15, y + height * 0.35, width * 0.7, height * 0.45);
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = "#fff";
     ctx.fillRect(x + width * 0.36, y + height * 0.48, width * 0.12, height * 0.18);
     ctx.fillRect(x + width * 0.66, y + height * 0.48, width * 0.12, height * 0.18);
-    ctx.fillStyle = '#ff9ef5';
+    ctx.fillStyle = "#ff9ef5";
     ctx.beginPath();
     ctx.moveTo(x + width * 0.35, y + height * 0.15);
     ctx.lineTo(x + width * 0.425, y + height * 0.05);
@@ -329,9 +592,9 @@ function drawSticker(type, x, y, width, height) {
     return;
   }
 
-  if (type === 'cat') {
-    ctx.fillStyle = '#ffcc66';
-    ctx.strokeStyle = '#b36b00';
+  if (type === "cat") {
+    ctx.fillStyle = "#ffcc66";
+    ctx.strokeStyle = "#b36b00";
     ctx.beginPath();
     ctx.arc(x + width * 0.5, y + height * 0.55, width * 0.3, 0, Math.PI * 2);
     ctx.fill();
@@ -345,7 +608,7 @@ function drawSticker(type, x, y, width, height) {
     ctx.lineTo(x + width * 0.65, y + height * 0.15);
     ctx.lineTo(x + width * 0.75, y + height * 0.35);
     ctx.fill();
-    ctx.fillStyle = '#000';
+    ctx.fillStyle = "#000";
     ctx.beginPath();
     ctx.arc(x + width * 0.4, y + height * 0.55, width * 0.05, 0, Math.PI * 2);
     ctx.fill();
@@ -360,9 +623,8 @@ function drawSticker(type, x, y, width, height) {
     return;
   }
 
-  if (type === 'unicorn') {
-    ctx.fillStyle = '#dd99ff';
-    ctx.strokeStyle = '#8b2860';
+  if (type === "unicorn") {
+    ctx.fillStyle = "#dd99ff";
     ctx.beginPath();
     ctx.arc(x + width * 0.45, y + height * 0.55, width * 0.24, 0, Math.PI * 2);
     ctx.fill();
@@ -370,9 +632,9 @@ function drawSticker(type, x, y, width, height) {
     ctx.moveTo(x + width * 0.34, y + height * 0.35);
     ctx.lineTo(x + width * 0.22, y + height * 0.16);
     ctx.lineTo(x + width * 0.42, y + height * 0.25);
-    ctx.fillStyle = '#ffdd66';
+    ctx.fillStyle = "#ffdd66";
     ctx.fill();
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = "#fff";
     ctx.beginPath();
     ctx.arc(x + width * 0.42, y + height * 0.55, width * 0.05, 0, Math.PI * 2);
     ctx.fill();
@@ -383,11 +645,11 @@ function drawSticker(type, x, y, width, height) {
     return;
   }
 
-  if (type === 'rainbow') {
+  if (type === "rainbow") {
     const radius = Math.min(width, height) * 0.45;
     const centerX = x + width * 0.5;
     const centerY = y + height * 0.65;
-    const colors = ['#ff5e84', '#ffcd3c', '#34c759', '#4d8cff'];
+    const colors = ["#ff5e84", "#ffcd3c", "#34c759", "#4d8cff"];
     colors.forEach((color, index) => {
       ctx.beginPath();
       ctx.strokeStyle = color;
@@ -399,9 +661,9 @@ function drawSticker(type, x, y, width, height) {
     return;
   }
 
-  if (type === 'princess') {
-    ctx.fillStyle = '#ff99cc';
-    ctx.strokeStyle = '#bf165f';
+  if (type === "princess") {
+    ctx.fillStyle = "#ff99cc";
+    ctx.strokeStyle = "#bf165f";
     ctx.beginPath();
     ctx.moveTo(x + width * 0.1, y + height * 0.7);
     ctx.lineTo(x + width * 0.2, y + height * 0.35);
@@ -413,7 +675,7 @@ function drawSticker(type, x, y, width, height) {
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = "#fff";
     ctx.beginPath();
     ctx.arc(x + width * 0.28, y + height * 0.45, 8, 0, Math.PI * 2);
     ctx.fill();
@@ -423,6 +685,16 @@ function drawSticker(type, x, y, width, height) {
     ctx.beginPath();
     ctx.arc(x + width * 0.72, y + height * 0.45, 8, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
+    return;
+  }
+
+  // Rare unlockable stickers as emoji-style drawings
+  if (RARE_STICKERS[type]) {
+    ctx.font = `${Math.floor(width * 0.7)}px serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(RARE_STICKERS[type].emoji, x + width / 2, y + height / 2);
     ctx.restore();
     return;
   }
@@ -437,6 +709,7 @@ function setBackground(type) {
   const image = new Image();
   image.onload = () => {
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    pushHistory();
   };
   image.src = snapshot;
 }
@@ -445,6 +718,7 @@ function clearCanvas() {
   currentTemplate = null;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBackground();
+  pushHistory();
   playSound("clear");
 }
 
@@ -466,6 +740,7 @@ function loadTemplate(src) {
   image.onload = () => {
     currentTemplate = image;
     drawBackground();
+    pushHistory();
     showStudioStatus("تم تحميل الرسم للتلوين 🎉");
     playSound("select");
   };
@@ -486,32 +761,98 @@ function showStudioStatus(message) {
   }, 3000);
 }
 
-function celebrateSave() {
-  const container = document.getElementById('confettiContainer');
-  if (!container) return;
+function celebrateSave(name) {
+  const container = document.getElementById("confettiContainer");
+  if (container) {
+    const colors = ["#ff69b4", "#ffd166", "#4d8cff", "#34c759", "#ff9ef5", "#ff7a7a", "#fff"];
+    for (let i = 0; i < 60; i++) {
+      const piece = document.createElement("div");
+      piece.className = "confetti-piece";
+      piece.style.background = colors[i % colors.length];
+      piece.style.left = `${Math.random() * 100}%`;
+      piece.style.top = `${Math.random() * 15 - 5}%`;
+      piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+      piece.style.width = `${8 + Math.random() * 12}px`;
+      piece.style.height = `${8 + Math.random() * 12}px`;
+      piece.style.animationDuration = `${900 + Math.random() * 900}ms`;
+      container.appendChild(piece);
+      setTimeout(() => piece.remove(), 2000);
+    }
+  }
 
-  const colors = ['#ff69b4', '#ffd166', '#4d8cff', '#34c759', '#ff9ef5', '#ff7a7a'];
-  for (let i = 0; i < 20; i++) {
-    const piece = document.createElement('div');
-    piece.className = 'confetti-piece';
-    piece.style.background = colors[i % colors.length];
-    piece.style.left = `${Math.random() * 100}%`;
-    piece.style.top = `${Math.random() * 20 - 10}%`;
-    piece.style.transform = `rotate(${Math.random() * 360}deg)`;
-    piece.style.width = `${8 + Math.random() * 8}px`;
-    piece.style.height = `${8 + Math.random() * 8}px`;
-    piece.style.animationDuration = `${900 + Math.random() * 500}ms`;
-    container.appendChild(piece);
-    setTimeout(() => piece.remove(), 1500);
+  const overlay = document.getElementById("celebrationOverlay");
+  const messageEl = document.getElementById("celebrationMessage");
+  if (overlay && messageEl) {
+    const praise = PRAISE[Math.floor(Math.random() * PRAISE.length)](name || getChildName());
+    messageEl.textContent = praise;
+    overlay.hidden = false;
+    overlay.classList.add("is-visible");
+    setTimeout(() => {
+      overlay.classList.remove("is-visible");
+      overlay.hidden = true;
+    }, 2800);
   }
 }
 
+function showUnlockOverlay(ids) {
+  if (!ids || !ids.length) return;
+  const overlay = document.getElementById("unlockOverlay");
+  const list = document.getElementById("unlockList");
+  if (!overlay || !list) return;
+  list.innerHTML = ids
+    .map((id) => {
+      const meta = RARE_STICKERS[id];
+      return `<div class="unlock-item"><span class="unlock-emoji">${meta.emoji}</span><span>${meta.label}</span></div>`;
+    })
+    .join("");
+  overlay.hidden = false;
+  overlay.classList.add("is-visible");
+  playSound("unlock");
+  setTimeout(() => {
+    overlay.classList.remove("is-visible");
+    overlay.hidden = true;
+  }, 3200);
+  renderRareStickers();
+}
+
+function renderRareStickers() {
+  const row = document.getElementById("rareStickers");
+  if (!row) return;
+  const unlocked = getUnlockedStickers();
+  row.innerHTML = Object.keys(RARE_STICKERS)
+    .map((id) => {
+      const meta = RARE_STICKERS[id];
+      const isOpen = unlocked.includes(id);
+      if (isOpen) {
+        return `<button type="button" class="sticker-button unlocked" onclick="addSticker('${id}')" aria-label="${meta.label}">${meta.emoji}</button>`;
+      }
+      return `<button type="button" class="sticker-button locked" disabled aria-label="مقفل">${meta.emoji}<span class="lock-badge">🔒</span></button>`;
+    })
+    .join("");
+}
+
 function saveDrawing() {
-  const image = canvas.toDataURL("image/png");
-  addDrawing(image);
-  celebrateSave();
+  let image;
+  try {
+    image = canvas.toDataURL("image/jpeg", 0.85);
+  } catch (error) {
+    image = canvas.toDataURL("image/png");
+  }
+
+  const result = addDrawing(image);
+  if (!result.ok) {
+    showStudioStatus("مساحة التخزين ممتلئة. احذفي بعض اللوحات من المعرض.");
+    playSound("error");
+    return;
+  }
+
+  celebrateSave(getChildName());
   showStudioStatus("تم حفظ اللوحة 🌟");
   playSound("save");
+
+  if (result.newlyUnlocked && result.newlyUnlocked.length) {
+    setTimeout(() => showUnlockOverlay(result.newlyUnlocked), 900);
+  }
 }
 
 function loadUploadImage() {
@@ -539,6 +880,7 @@ function loadUploadImage() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawBackground();
       ctx.drawImage(image, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
+      pushHistory();
       showStudioStatus("تم تحميل صورتك للتلوين 🎉");
       playSound("upload");
     };
@@ -549,16 +891,24 @@ function loadUploadImage() {
 
 window.addEventListener("resize", () => {
   const snapshot = canvas.toDataURL();
-  resizeCanvas();
+  const width = Math.min(window.innerWidth - 40, 760);
+  canvas.width = width;
+  canvas.height = 500;
   const image = new Image();
   image.onload = () => {
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    historyStack = [];
+    historyIndex = -1;
+    pushHistory();
   };
   image.src = snapshot;
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+  unlockStickersForStars(getStars());
   updateSoundButtonLabel();
+  renderRareStickers();
+  updateUndoRedoButtons();
 });
 
 canvas.addEventListener("mousedown", startDrawing);
@@ -575,7 +925,8 @@ canvas.addEventListener("touchmove", (event) => {
 });
 canvas.addEventListener("touchend", stopDrawing);
 
-upload.addEventListener("change", loadUploadImage);
+if (upload) {
+  upload.addEventListener("change", loadUploadImage);
+}
 
 resizeCanvas();
-drawBackground();

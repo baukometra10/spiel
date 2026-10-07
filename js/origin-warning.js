@@ -74,7 +74,17 @@ function initNetworkStatus() {
   window.addEventListener('offline', handleOfflineStatus);
 }
 
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator) || location.protocol === 'file:') {
+    return;
+  }
+  navigator.serviceWorker.register('service-worker.js').catch((error) => {
+    console.error('Service Worker registration failed:', error);
+  });
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   showOriginWarning();
   initNetworkStatus();
+  registerServiceWorker();
 });
